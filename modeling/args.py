@@ -50,7 +50,7 @@ def parse_args(mode="train"):
     parser.add_argument("--drop_out", default=0.2, type=float, help="drop out rate")
 
     # 훈련
-    parser.add_argument("--n_epochs", default=20, type=int, help="number of epochs")
+    parser.add_argument("--n_epochs", default=1000, type=int, help="number of epochs")
     parser.add_argument("--batch_size", default=64, type=int, help="batch size")
     parser.add_argument("--lr", default=0.0001, type=float, help="learning rate")
     parser.add_argument("--clip_grad", default=10, type=int, help="clip grad")
@@ -70,7 +70,9 @@ def parse_args(mode="train"):
         "--scheduler", default="plateau", type=str, help="scheduler type"
     )
 
-
+    parser.add_argument(
+        "--data_to_feed", default="all", type=str, help="data to feed range, tr/trval/all"
+    )
 
     args = parser.parse_args()
 
