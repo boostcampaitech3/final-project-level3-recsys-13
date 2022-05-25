@@ -26,14 +26,14 @@ def main():
         rate = st.text_input(label="평점")
         if st.button("추천받기"):
             try:
-                recommended = requests.post("http://localhost:30002/recommend", json={"rate":float(rate)}).json()
+                recommended = requests.post("http://localhost:30002/api/v1/recommend", json={"rate":float(rate)}).json()
                 st.write(recommended)
             except:
                 st.write("실수가 아닙니다.")
         
 
 def authenticate(id):
-    return requests.post("http://localhost:30002/login", json={"login":id}).json()
+    return requests.post("http://localhost:30002/api/v1/login", json={"userid":id}).json()
 
 def logined():
     if st.button("확인", key="confirm_button"):
