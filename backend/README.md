@@ -2,6 +2,15 @@
 
 A short description of the project
 
+실행하기 전,
+
+`make install`
+
+실행 시,
+
+`make run`
+
+
 ## Development Requirements
 
 - Python3.8.2
