@@ -28,8 +28,11 @@ class Recipes(BaseModel):
 class Rate(BaseModel):
     rate : float
 
-class Response(BaseModel):
+class login_Response(BaseModel):
     lists : list
+
+class recommend_Response(BaseModel):
+    rate : float
 
 
 @app.on_event("startup")
@@ -62,7 +65,7 @@ def return_answer(data: Recipes):
             i=(i+1)%len(df)
             tmp = df.iloc[i]
         dd.append({"id": int(tmp["id"]), "name": tmp["name"], "description": tmp.description})
-    return Response(lists = dd)
+    return login_Response(lists = dd)
 
 
 @app.post("/recommend", description="추천아이템을 요청합니다")
@@ -71,7 +74,7 @@ async def return_answer(rate: Rate):
         return "잘못된 평점입니다. 0~5점 사이로 입력해주세요!"
     #TODO
 
-    return rate.rate
+    return recommend_Response(rate=rate.rate)
 
 
 if __name__ == '__main__':

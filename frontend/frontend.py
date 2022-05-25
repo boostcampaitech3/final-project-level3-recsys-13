@@ -27,7 +27,7 @@ def main():
         if st.button("추천받기"):
             try:
                 recommended = requests.post("http://localhost:30002/recommend", json={"rate":float(rate)}).json()
-                st.write(recommended)
+                st.write(recommended["rate"])
             except:
                 st.write("실수가 아닙니다.")
         
