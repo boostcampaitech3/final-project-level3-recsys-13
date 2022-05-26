@@ -1,5 +1,6 @@
 from typing import Any
 
+import os
 import joblib
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
@@ -44,22 +45,37 @@ async def health():
 
 #######################################
 
-df = pd.read_csv("/opt/final-project-level3-recsys-13/modeling/data/RAW_recipes.csv")
-with open('/opt/final-project-level3-recsys-13/modeling/data/i_item.pkl', 'rb') as f:
-    i_item = pickle.load(f)
-with open('/opt/final-project-level3-recsys-13/modeling/data/id_u.pkl', 'rb') as f:
-    id_u = pickle.load(f)
-assert isinstance(i_item, dict)
-assert isinstance(id_u, dict)
+data_dir = "/opt/final-project-level3-recsys-13/modeling/data/"
+df = pd.read_csv(os.path.join(data_dir, "RAW_recipes.csv"))
 
-csr = sp.load_npz('/opt/final-project-level3-recsys-13/modeling/data/csr.npz')
+try:
+    with open(os.path.join(data_dir, "i_item.pkl"), 'rb') as f:
+        i_item = pickle.load(f)
+    with open(os.path.join(data_dir, "id_u.pkl"), 'rb') as f:
+        id_u = pickle.load(f)
+    # assert isinstance(i_item, dict)
+    # assert isinstance(id_u, dict)
+
+    csr = sp.load_npz(os.path.join(data_dir, "csr.npz"))
+except Exception as e:
+    from .generateChanger import generate_changer
+    generate_changer()
+    with open(os.path.join(data_dir, "i_item.pkl"), 'rb') as f:
+        i_item = pickle.load(f)
+    with open(os.path.join(data_dir, "id_u.pkl"), 'rb') as f:
+        id_u = pickle.load(f)
+    # assert isinstance(i_item, dict)
+    # assert isinstance(id_u, dict)
+
+    csr = sp.load_npz(os.path.join(data_dir, "csr.npz"))
+
 user_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_userfactors.npy")
 item_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_itemfactors.npy")
 
 LABEL_CNT = 10
 
 @router.post("/login", description="Top10 recipes를 요청합니다")
-def return_top10_recipes(data: UseridRequest):
+async def return_top10_recipes(data: UseridRequest):
     userid = data.userid
     userids = [ userid ]
 
