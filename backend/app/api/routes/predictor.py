@@ -45,6 +45,7 @@ async def health():
 
 #######################################
 
+<<<<<<< HEAD
 data_dir = "/opt/final-project-level3-recsys-13/modeling/data/"
 df = pd.read_csv(os.path.join(data_dir, "RAW_recipes.csv"))
 
@@ -69,13 +70,28 @@ except Exception as e:
 
     csr = sp.load_npz(os.path.join(data_dir, "csr.npz"))
 
+=======
+df = pd.read_csv("/opt/final-project-level3-recsys-13/modeling/data/RAW_recipes.csv")
+with open('/opt/final-project-level3-recsys-13/modeling/data/i_item.pkl', 'rb') as f:
+    i_item = pickle.load(f)
+with open('/opt/final-project-level3-recsys-13/modeling/data/id_u.pkl', 'rb') as f:
+    id_u = pickle.load(f)
+assert isinstance(i_item, dict)
+assert isinstance(id_u, dict)
+
+csr = sp.load_npz('/opt/final-project-level3-recsys-13/modeling/data/csr.npz')
+>>>>>>> origin/dev
 user_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_userfactors.npy")
 item_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_itemfactors.npy")
 
 LABEL_CNT = 10
 
 @router.post("/login", description="Top10 recipes를 요청합니다")
+<<<<<<< HEAD
 async def return_top10_recipes(data: UseridRequest):
+=======
+def return_top10_recipes(data: UseridRequest):
+>>>>>>> origin/dev
     userid = data.userid
     userids = [ userid ]
 
