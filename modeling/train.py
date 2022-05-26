@@ -9,8 +9,9 @@ import foodcomImplicit
 from modeling_utils import setSeeds
 
 def main(args):
-    wandb.login()
-    wandb.init(project="food_reco", config=vars(args))
+    if args.wandb:
+        wandb.login()
+        wandb.init(project="food_reco", config=vars(args))
 
     setSeeds(42)
 
@@ -23,7 +24,7 @@ def main(args):
 
     else:
         preprocess = foodcomTorch.Preprocess_interactions(args)
-        preprocess.load_train_data(args.file_name)
+        preprocess.load_train_data()
         train_data = preprocess.get_train_data()
 
         train_data, valid_data = preprocess.split_data(train_data)

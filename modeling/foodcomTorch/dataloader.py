@@ -5,6 +5,8 @@ import torch
 import scipy
 import pandas as pd
 import numpy as np
+from sklearn.utils import shuffle
+from scipy.sparse import csr_matrix
 
 class Preprocess_interactions():
     def __init__(self, args):
@@ -18,13 +20,12 @@ class Preprocess_interactions():
     def get_test_data(self):
         return self.test_data
 
-    def split_data(self, data, ratio=0.7, shuffle=True, seed=42):
+    def split_data(self, data, ratio=0.7, is_shuffle=True, seed=42):
         """
         split data into two parts with a given ratio.
         """
-        if shuffle:
-            random.seed(seed)  # fix to default seed 0
-            random.shuffle(data)
+        if is_shuffle:
+            data = shuffle(data, random_state=seed)
 
         size = int(len(data) * ratio)
         data_1 = data[:size]
@@ -38,9 +39,21 @@ class Preprocess_interactions():
     def __feature_engineering(self, df):
         return df
 
-    def load_data_from_file(self, file_name, is_train=True):
-        csv_file_path = os.path.join(self.args.data_dir, file_name)
-        df = pd.read_csv(csv_file_path)
+    def load_data_from_file(self, is_train=True):
+        train_file_path = os.path.join(self.args.data_dir, "interactions_train.csv")
+        valid_file_path = os.path.join(self.args.data_dir, "interactions_validation.csv")
+        test_file_path = os.path.join(self.args.data_dir, "interactions_test.csv")
+
+        df_train = pd.read_csv(train_file_path)
+        df_valid = pd.read_csv(valid_file_path)
+        df_test = pd.read_csv(test_file_path)
+        if self.args.data_to_feed == "tr":
+            df = df_train
+        elif self.args.data_to_feed == "trval":
+            df = pd.concat([df_train, df_valid])
+        elif self.args.data_to_feed == "all":
+            df = pd.concat([df_train, df_valid, df_test])
+
         df = self.__preprocessing(df, is_train)
         df = self.__feature_engineering(df)
 
@@ -50,8 +63,8 @@ class Preprocess_interactions():
 
         return df
 
-    def load_train_data(self, file_name):
-        return None
+    def load_train_data(self):
+        self.train_data = self.load_data_from_file(self)
 
     def load_test_data(self, file_name):
         return None
@@ -62,14 +75,14 @@ class InteractionsDataset(torch.utils.data.Dataset):
     Load Food.com dataset
     '''
     def __init__(self, data, args):
-        self.data : scipy.sparse.csr_matrix = data
+        self.data = data
         self.args = args
     
     def __len__(self):
-        return self.data.shape[0]
+        return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        return self.data.iloc[idx].to_dict()
 
 def get_loaders(args, train, valid):
 
@@ -79,12 +92,12 @@ def get_loaders(args, train, valid):
     if train is not None:
         trainset = InteractionsDataset(train, args)
         train_loader = torch.utils.data.DataLoader(
-            trainset,
-            num_workers=args.num_workers,
-            shuffle=True,
-            batch_size=args.batch_size,
-            pin_memory=pin_memory,
-        )
+        trainset,
+        num_workers=args.num_workers,
+        shuffle=True,
+        batch_size=args.batch_size,
+        pin_memory=pin_memory,
+    )
     if valid is not None:
         valset = InteractionsDataset(valid, args)
         valid_loader = torch.utils.data.DataLoader(

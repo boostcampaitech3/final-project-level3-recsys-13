@@ -14,15 +14,15 @@ class MultiVAE(nn.Module):
     https://arxiv.org/abs/1802.05814
     """
 
-    def __init__(self, p_dims, q_dims=None, dropout=0.5):
+    def __init__(self, args, q_dims=None, dropout=0.5):
         super(MultiVAE, self).__init__()
-        self.p_dims = p_dims
+        self.p_dims = [200, 600, args.num_items]
         if q_dims:
-            assert q_dims[0] == p_dims[-1], "In and Out dimensions must equal to each other"
-            assert q_dims[-1] == p_dims[0], "Latent dimension for p- and q- network mismatches."
+            assert q_dims[0] == self.p_dims[-1], "In and Out dimensions must equal to each other"
+            assert q_dims[-1] == self.p_dims[0], "Latent dimension for p- and q- network mismatches."
             self.q_dims = q_dims
         else:
-            self.q_dims = p_dims[::-1]
+            self.q_dims = self.p_dims[::-1]
 
         # Last dimension of q- network is for mean and variance
         temp_q_dims = self.q_dims[:-1] + [self.q_dims[-1] * 2]

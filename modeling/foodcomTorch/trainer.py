@@ -13,8 +13,9 @@ from .metric import get_metric
 from .model import *
 from .optimizer import get_optimizer
 from .scheduler import get_scheduler
-
-
+from scipy.sparse import csr_matrix
+import pandas as pd
+update_count = 0
 
 def run(args, train_data, valid_data):
     # 캐시 메모리 비우기 및 가비지 컬렉터 가동!
@@ -48,16 +49,17 @@ def run(args, train_data, valid_data):
         auc, acc = validate(valid_loader, model, args)
 
         ### TODO: model save or early stopping
-        wandb.log(
-            {
-                "epoch": epoch,
-                "train_loss": train_loss,
-                "train_auc": train_auc,
-                "train_acc": train_acc,
-                "valid_auc": auc,
-                "valid_acc": acc,
-            }
-        )
+        if args.wandb:
+            wandb.log(
+                {
+                    "epoch": epoch,
+                    "train_loss": train_loss,
+                    "train_auc": train_auc,
+                    "train_acc": train_acc,
+                    "valid_auc": auc,
+                    "valid_acc": acc,
+                }
+            )
         if auc > best_auc:
             best_auc = auc
             # torch.nn.DataParallel로 감싸진 경우 원래의 model을 가져옵니다.
@@ -84,19 +86,38 @@ def run(args, train_data, valid_data):
             scheduler.step(best_auc)
 
 
+def get_csr_matrix(df : pd.DataFrame, use_rating=False) -> csr_matrix:
+    _view = [1]*df.shape[0] if not use_rating else df['rating'].values
+    _matrix = csr_matrix((_view, (df['u'], df['i'])), \
+                        shape=(df['u'].max()+1, df['i'].max()+1))
+    return _matrix
+
 def train(train_loader, model, optimizer, scheduler, args):
+    global update_count
     model.train()
 
     total_preds = []
     total_targets = []
     losses = []
     for step, batch in enumerate(train_loader):
-        input = process_batch(batch, args)
-        preds = model(input)
-        targets = input[3]  # correct
+        if args.model=="multivae":
+            if args.total_anneal_steps > 0:
+                anneal = min(args.anneal_cap, 
+                                1. * update_count / args.total_anneal_steps)
+            else:
+                anneal = args.anneal_cap
+            batch = get_csr_matrix(pd.DataFrame(batch))
+            batch = torch.FloatTensor(batch.toarray()).to(args.device)
+            recon_batch, mu, logvar = model(batch)
+            loss = loss_function(recon_batch, batch, mu, logvar, anneal)
+        else:
+            input = process_batch(batch, args)
+            preds = model(input)
+            targets = input[3]  # correct
 
-        loss = compute_loss(preds, targets)
+            loss = compute_loss(preds, targets)
         update_params(loss, model, optimizer, scheduler, args)
+        update_count+=1
 
         if step % args.log_steps == 0:
             print(f"Training steps: {step} Loss: {str(loss.item())}")
@@ -262,6 +283,12 @@ def compute_loss(preds, targets):
     loss = torch.mean(loss)
     return loss
 
+def loss_function(recon_x, x, mu, logvar, anneal=1.0):
+    # BCE = F.binary_cross_entropy(recon_x, x)
+    BCE = -torch.mean(torch.sum(F.log_softmax(recon_x, 1) * x, -1))
+    KLD = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1))
+
+    return BCE + anneal * KLD
 
 def update_params(loss, model, optimizer, scheduler, args):
     loss.backward()

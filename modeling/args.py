@@ -49,6 +49,12 @@ def parse_args(mode="train"):
     parser.add_argument("--n_heads", default=2, type=int, help="number of heads")
     parser.add_argument("--drop_out", default=0.2, type=float, help="drop out rate")
 
+    # MultiVAE setting
+    parser.add_argument('--total_anneal_steps', type=int, default=200000,
+                    help='the total number of gradient updates for annealing')
+    parser.add_argument('--anneal_cap', type=float, default=0.2,
+                        help='largest annealing parameter')
+
     # 훈련
     parser.add_argument("--n_epochs", default=1000, type=int, help="number of epochs")
     parser.add_argument("--batch_size", default=64, type=int, help="batch size")
@@ -64,7 +70,7 @@ def parse_args(mode="train"):
     parser.add_argument("--regularization", default=0.1, type=float, help="regularization")
 
     ##### 모델 이름 #####
-    parser.add_argument("--model", default="als", type=str, help="model type")
+    parser.add_argument("--model", default="multivae", type=str, help="model type")
     parser.add_argument("--optimizer", default="adam", type=str, help="optimizer type")
     parser.add_argument(
         "--scheduler", default="plateau", type=str, help="scheduler type"
@@ -72,6 +78,11 @@ def parse_args(mode="train"):
 
     parser.add_argument(
         "--data_to_feed", default="all", type=str, help="data to feed range, tr/trval/all"
+    )
+
+    ## wandb 설정
+    parser.add_argument(
+        "--wandb", default=False, type=bool, help="wandb ON/OFF"
     )
 
     args = parser.parse_args()
