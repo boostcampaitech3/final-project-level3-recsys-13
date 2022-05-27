@@ -26,5 +26,5 @@ def startup_event():
 def shutdown_event():
     print("Shutdown Event!")
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=30002, reload=False, debug=False)
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", host="0.0.0.0", port=30002, reload=False, debug=False)
