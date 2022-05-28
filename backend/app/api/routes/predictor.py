@@ -45,7 +45,7 @@ async def health():
 
 #######################################
 
-data_dir = "/opt/final-project-level3-recsys-13/modeling/data/"
+data_dir = os.path.join(os.path.dirname(os.getcwd()), "modeling/data/")
 df = pd.read_csv(os.path.join(data_dir, "RAW_recipes.csv"))
 
 try:
@@ -67,8 +67,8 @@ except Exception as e:
     # assert isinstance(id_u, dict)
     csr = sp.load_npz(os.path.join(data_dir, "csr.npz"))
 
-user_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_userfactors.npy")
-item_factors: np.ndarray = np.load("/opt/final-project-level3-recsys-13/modeling/_als_itemfactors.npy")
+user_factors: np.ndarray = np.load(os.path.join(os.path.dirname(os.getcwd()), "modeling/_als_userfactors.npy"))
+item_factors: np.ndarray = np.load(os.path.join(os.path.dirname(os.getcwd()),"modeling/_als_itemfactors.npy"))
 
 LABEL_CNT = 10
 
