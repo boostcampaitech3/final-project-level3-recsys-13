@@ -65,31 +65,19 @@ df = pd.read_sql("select * from public.recipes_df", engine)
 
 
 # @router.post("/recten", description="Top10 recipes를 요청합니다")
-# async def return_top10_recipes(data: UseridRequest):
 #     userid = data.userid
-#     userids = [userid]
+#     useridx = id_u[userid]
 
-#     useridxs = [id_u[userid] for userid in userids]
+#     users_preference: np.ndarray = (user_factors[useridx] @ item_factors.T)
+#     users_preference[csr[useridx].nonzero()[1]] = float('-inf')
+#     top10_i = users_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
+#     top10_itemid = [ i_item[i] for i in top10_i if i in i_item ]
 
-#     users_preferences = (user_factors[useridxs] @ item_factors.T)
-#     users_preferences[csr[useridxs, :].nonzero()] = float('-inf')
-#     top10s = [m.argpartition(-LABEL_CNT)[-LABEL_CNT:]
-#               for m in users_preferences]
+#     user_reco = []
+#     for id, name, description in df[df['id'].isin(top10_itemid)][['id','name','description']].values:
+#         user_reco.append( {'id': id, 'name': name, 'description': description} )
 
-#     user_recos = []
-#     for top10 in top10s:
-#         ids = []
-#         for top in top10:
-#             try:
-#                 ids.append(i_item[top])
-#             except KeyError:
-#                 pass
-#         user_reco = []
-#         for id, name, description in df[df['id'].isin(ids)][['id', 'name', 'description']].values:
-#             user_reco.append(
-#                 {'id': id, 'name': name, 'description': description})
-#         user_recos.append(user_reco)
-#     return Top10RecipesResponse(lists=user_recos[0])
+#     return Top10RecipesResponse(lists = user_reco)
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
