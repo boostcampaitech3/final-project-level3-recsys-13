@@ -61,6 +61,7 @@ df = pd.read_sql("select * from public.recipes_df", engine)
 
 
 # @router.post("/recten", description="Top10 recipes를 요청합니다")
+# async def return_top10_recipes(data: UseridRequest):
 #     userid = data.userid
 #     useridx = id_u[userid]
 
