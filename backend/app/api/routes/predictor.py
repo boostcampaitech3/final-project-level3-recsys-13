@@ -9,13 +9,12 @@ from loguru import logger
 from schema.prediction import GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
 from services.predict import MachineLearningModelHandlerScore as model
 
-import pickle
-import numpy as np
 import pandas as pd
-import scipy.sparse as sp
 import re
 import sqlalchemy
 import time
+from core.config import DATABASE_URL
+
 router = APIRouter()
 
 ############ SAMPLE CODE #############
@@ -48,18 +47,15 @@ router = APIRouter()
 
 #######################################
 
-def connect(user, password, db, host='101.101.211.183', port=30003):
+def get_db_engine():
     '''Returns a connection and a metadata object'''
-    url = 'postgresql://{}:{}@{}:{}/{}'
-    url = url.format(user, password, host, port, db)
-
-    engine = sqlalchemy.create_engine(url, echo=True)
+    engine = sqlalchemy.create_engine(DATABASE_URL, echo=True)
     #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
     return engine  # , meta
 
 
 # 연결
-engine = connect('admin', '1234', 'db')
+engine = get_db_engine()
 
 df = pd.read_sql("select * from public.recipes_df", engine)
 

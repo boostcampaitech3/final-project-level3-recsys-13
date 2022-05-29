@@ -14,6 +14,8 @@ loguru = "^0.4.0"
 joblib = "^0.15.1"
 pandas = "^1.4.2"
 scipy = "^1.8.1"
+SQLAlchemy = "^1.4.36"
+psycopg2-binary = "^2.9.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
