@@ -6,14 +6,11 @@ import sqlalchemy
 import pandas as pd
 from sqlalchemy.dialects.postgresql import insert
 from scipy.sparse import csr_matrix
+from core.config import DATABASE_URL
 
-
-def connect(user, password, db, host='101.101.211.183', port=30003):
+def get_db_engine():
     '''Returns a connection and a metadata object'''
-    url = 'postgresql://{}:{}@{}:{}/{}'
-    url = url.format(user, password, host, port, db)
-
-    engine = sqlalchemy.create_engine(url, echo=True)
+    engine = sqlalchemy.create_engine(DATABASE_URL, echo=True)
     #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
     return engine  # , meta
 
@@ -43,7 +40,7 @@ def read_data(args):
 
 
 def load_data(args):
-    engine = connect('admin', '1234', 'db')
+    engine = get_db_engine()
     df = pd.read_sql("select * from public.interactions_df", engine)
     train_data = get_csr_matrix(df)
     return train_data
