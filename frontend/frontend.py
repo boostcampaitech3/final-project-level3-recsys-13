@@ -7,7 +7,7 @@ import random
 import string
 
 from confirm_button_hack import cache_on_button_press
-import torch
+# import torch
 # from model.args import parse_args
 # from model.dataloader import Preprocess
 # from model.model import LSTM, LSTMATTN, Bert
