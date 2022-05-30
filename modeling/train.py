@@ -18,8 +18,8 @@ def main(args):
     args.device = device
 
     if args.model == "als":
-        train_data, valid_data, test_data = foodcomImplicit.dataloader.read_data(args)
-        foodcomImplicit.run(args, train_data, valid_data)
+        train_data= foodcomImplicit.dataloader.load_data(args)
+        foodcomImplicit.run(args, train_data)
 
     else:
         preprocess = foodcomTorch.Preprocess_interactions(args)
