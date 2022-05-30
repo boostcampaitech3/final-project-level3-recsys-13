@@ -1,0 +1,2 @@
+model,recall,hyperparameters,batch_tag
+als,0.0071931970411788625,"{'factors': 100, 'regularization': 0.001, 'epoch': 0}",0
