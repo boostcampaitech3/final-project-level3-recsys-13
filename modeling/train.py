@@ -2,38 +2,47 @@ import os
 import torch
 import wandb
 from args import parse_args
+import warnings
+from datetime import datetime, timezone, timedelta
 
 import foodcomTorch
 import foodcomImplicit
+from foodcomItem2Vec.bert2vec import bert2vec
 
-from modeling_utils import setSeeds
+from utils import setSeeds
 
 def main(args):
-    wandb.login()
-    wandb.init(project="food_reco", config=vars(args))
+    #wandb.login()
+    #wandb.init(project="food_reco", config=vars(args))
 
-    setSeeds(42)
-
+    # basic settings
+    KST = timezone(timedelta(hours=9))
+    warnings.filterwarnings('ignore')
+    setSeeds(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
 
+    # model
     if args.model == "als":
-        train_data= foodcomImplicit.dataloader.load_data(args)
-        foodcomImplicit.run(args, train_data)
-
-    else:
-        preprocess = foodcomTorch.Preprocess_interactions(args)
-        preprocess.load_train_data(args.file_name)
-        train_data = preprocess.get_train_data()
-
-        train_data, valid_data = preprocess.split_data(train_data)
-
+        now = datetime.now(KST).strftime('%Y-%m-%d_%H:%M:%S')
+        print(f'als ! [start time: {now}]')
+        train_data, user_item_matrix, test_data = foodcomImplicit.dataset.read_data(args)
+        foodcomImplicit.trainer.run(args, train_data, user_item_matrix, test_data)
         
-        foodcomTorch.run(args, train_data, valid_data)
-
+    elif args.model == 'torch-':
+        pass
+    
+        # preprocess = foodcomTorch.Preprocess_interactions(args)
+        # preprocess.load_train_data(args.file_name)
+        # train_data = preprocess.get_train_data()
+        # train_data, valid_data = preprocess.split_data(train_data)
+        # foodcomTorch.run(args, train_data, valid_data)
+        
+    elif args.model == 'bert2vec':
+        bert2vec(args)
+        
     
 
-if __name__ == "__main__":
-    args = parse_args(mode="train")
-    os.makedirs(args.model_dir, exist_ok=True)
+if __name__ == "__main__":    
+    args = parse_args()
     main(args)

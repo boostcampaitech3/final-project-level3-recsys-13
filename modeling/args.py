@@ -1,79 +1,40 @@
 import argparse
 
-
-def parse_args(mode="train"):
+def parse_args():
     parser = argparse.ArgumentParser()
-
+    
+    # basic settings & common settings
     parser.add_argument("--seed", default=42, type=int, help="seed")
-
-    parser.add_argument("--device", default="cpu", type=str, help="cpu or gpu")
-
-    parser.add_argument(
-        "--data_dir",
-        default="./data/",
-        type=str,
-        help="data directory",
-    )
-    parser.add_argument(
-        "--asset_dir", default="asset/", type=str, help="data directory"
-    )
-
-    parser.add_argument(
-        "--file_name", default="interactions_train.csv", type=str, help="train file name"
-    )
-
-    parser.add_argument(
-        "--model_dir", default="models/", type=str, help="model directory"
-    )
-    parser.add_argument(
-        "--model_name", default="model.pt", type=str, help="model file name"
-    )
-
-    parser.add_argument(
-        "--output_dir", default="output/", type=str, help="output directory"
-    )
-    parser.add_argument(
-        "--test_file_name", default="interactions_test.csv", type=str, help="test file name"
-    )
-
-    parser.add_argument(
-        "--max_seq_len", default=20, type=int, help="max sequence length"
-    )
-    parser.add_argument("--num_workers", default=1, type=int, help="number of workers")
-
-    # 모델
-    parser.add_argument(
-        "--hidden_dim", default=64, type=int, help="hidden dimension size"
-    )
-    parser.add_argument("--n_layers", default=2, type=int, help="number of layers")
-    parser.add_argument("--n_heads", default=2, type=int, help="number of heads")
-    parser.add_argument("--drop_out", default=0.2, type=float, help="drop out rate")
-
-    # 훈련
-    parser.add_argument("--n_epochs", default=1000, type=int, help="number of epochs")
-    parser.add_argument("--batch_size", default=64, type=int, help="batch size")
-    parser.add_argument("--lr", default=0.0001, type=float, help="learning rate")
-    parser.add_argument("--clip_grad", default=10, type=int, help="clip grad")
-    parser.add_argument("--patience", default=5, type=int, help="for early stopping")
-
-    parser.add_argument(
-        "--log_steps", default=50, type=int, help="print log per n steps"
-    )
-
-    parser.add_argument("--factors", default=300, type=int, help="number of factors")
-    parser.add_argument("--regularization", default=0.1, type=float, help="regularization")
-
-    ##### 모델 이름 #####
-    parser.add_argument("--model", default="als", type=str, help="model type")
-    parser.add_argument("--optimizer", default="adam", type=str, help="optimizer type")
-    parser.add_argument(
-        "--scheduler", default="plateau", type=str, help="scheduler type"
-    )
-
-    parser.add_argument(
-        "--data_to_feed", default="all", type=str, help="data to feed range, tr/trval/all"
-    )
-
+    parser.add_argument("--no_exp_save", action='store_true')  # 해당 인자를 입력할 때만 True로 적용하여 실험 결과를 저장하지 않음
+    parser.add_argument("--patience", default=3, type=int, help="patient n. for early stopping")
+    parser.add_argument("--n_epochs", default=5, type=int, help="iter n")
+    parser.add_argument("--device", default='cuda', type=str, help="cuda or cpu")
+    
+    ## make subparsers
+    subparsers = parser.add_subparsers(dest='model')
+    parser_als = subparsers.add_parser(name='als')
+    parser_bert2vec = subparsers.add_parser(name='bert2vec')
+    
+    # als settings
+    parser_als.add_argument("--n_valid", default=1, type=int, help="validation set n")
+    parser_als.add_argument("--n_iter", default=20, type=int, help='iter in model')
+    parser_als.add_argument("--n_seq", default=1, type=int, help="sequence n in the validation set")
+    parser_als.add_argument("--factors", default=100, type=int, help="number of factors")
+    parser_als.add_argument("--regularization", default=0.001, type=float, help="regularization")
+    parser_als.add_argument("--als_dir",default="./foodcomImplicit/architects",type=str,help="als architects directory")
+    parser_als.add_argument("--top_k", default=3, type=int, help="recall at k")
+    parser_als.add_argument("--inference_n", default=10, type=int, help="argprtition n for inference")
+    
+    # bert2vec settings
+    parser_bert2vec.add_argument('--bert', type=str, default='bert-large-nli-stsb-mean-tokens', help='pretrained 모델')
+    parser_bert2vec.add_argument('--save_path', type=str, default='./foodcomItem2Vec', help='similar_answer 저장위치')
+    parser_bert2vec.add_argument("--cal_similarity", action='store_true')  # 해당 인자를 입력할 때만 True로 적용하여 실험 결과를 저장하지 않음
+    parser_bert2vec.add_argument('--batch', type=int, default=2000, help='cosine_similarity 계산시 batch')
+    parser_bert2vec.add_argument('--top_n', type=int, default=25, help='cosine_similarity에서 가져올 개수')
+    parser_bert2vec.add_argument('--col_name1', type=str, default='recipes1', help='첫 번째 col 이름')
+    parser_bert2vec.add_argument('--col_name2', type=str, default='recipes2', help='두 번째 col 이름')
+        
+    
     args = parser.parse_args()
 
     return args
