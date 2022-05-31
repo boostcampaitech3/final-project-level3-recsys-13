@@ -4,6 +4,7 @@ import pickle
 import os
 import random
 import torch
+import wandb
 from tqdm import tqdm
 
 def setSeeds(seed=42):
@@ -91,7 +92,7 @@ def recall_at_k(predicted:list, actual:list, topk:int) -> float:
 
 
        
-def recall_at_k_with_similar(test_path:str, predicted:list, topk:int) -> float:
+def recall_at_k_with_similar_data(test_path:str, predicted:list, topk:int) -> float:
     # actual
     with open(os.path.join(test_path, 'answer.pickle'), 'rb') as f:
         actual = pickle.load(f)
@@ -116,3 +117,45 @@ def recall_at_k_with_similar(test_path:str, predicted:list, topk:int) -> float:
             true_users += 1
             
     return sum_recall / true_users
+
+
+def wandb_download(runs:str = "boostcamp-relu/foodcom") -> pd.DataFrame:
+    api = wandb.Api()
+    runs = api.runs(runs)
+
+    summary_list, config_list, name_list = [], [], []
+    for run in runs: 
+        # .summary contains the output keys/values for metrics like accuracy.
+        #  We call ._json_dict to omit large files 
+        summary_list.append(run.summary._json_dict)
+
+        # .config contains the hyperparameters.
+        #  We remove special values that start with _.
+        config_list.append(
+            {k: v for k,v in run.config.items()
+            if not k.startswith('_')})
+
+        # .name is the human-readable name of the run.
+        name_list.append(run.name)
+
+    summary_df = pd.DataFrame(summary_list)
+    config_df = pd.DataFrame(config_list)
+    name_df = pd.DataFrame(name_list)
+    name_df.columns=['exp_name']
+    
+    run_df = pd.concat([name_df, config_df, summary_df], axis=1
+                       )
+    return run_df
+
+
+def best_model_finder(run_df:pd.DataFrame) -> str:
+    recent_batch_tag = run_df.batch_tag.max()
+    recent_df = run_df[run_df['batch_tag'] == recent_batch_tag]
+    
+    best_score = recent_df['test recall'].max()
+    best_model = recent_df[recent_df['test recall'] == best_score].iloc[0,:]
+    
+    best_model_str = f'{best_model["model"]}_{best_model["batch_tag"]}'
+    
+    return best_model_str
+    
