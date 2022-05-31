@@ -16,6 +16,8 @@ pandas = "^1.4.2"
 scipy = "^1.8.1"
 SQLAlchemy = "^1.4.36"
 psycopg2-binary = "^2.9.3"
+google = "^3.0.0"
+google-cloud-storage = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

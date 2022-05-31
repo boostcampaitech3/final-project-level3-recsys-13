@@ -9,11 +9,15 @@ from loguru import logger
 from schema.prediction import GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
 from services.predict import MachineLearningModelHandlerScore as model
 
+import numpy as np
 import pandas as pd
 import re
 import sqlalchemy
 import time
-from core.config import DATABASE_URL
+from core.config import DATABASE_URL, GOOGLE_APPLICATION_CREDENTIALS
+
+from google.cloud import storage
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=GOOGLE_APPLICATION_CREDENTIALS
 
 router = APIRouter()
 
@@ -57,23 +61,35 @@ def get_db_engine():
 # 연결
 engine = get_db_engine()
 
-df = pd.read_sql("select * from public.recipes_df", engine)
+df = pd.read_sql("select * from public.recipes", engine)
+
+storage_client = storage.Client()
+bucket = storage_client.bucket('foodcom_als_models')
+bucket.blob('_als_itemfactors.npy').download_to_filename('_als_itemfactors.npy')
+bucket.blob('_als_userfactors.npy').download_to_filename('_als_userfactors.npy')
 
 
-# @router.post("/recten", description="Top10 recipes를 요청합니다")
-#     userid = data.userid
-#     useridx = id_u[userid]
+user_factors: np.ndarray = np.load("_als_userfactors.npy")
+item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 
-#     users_preference: np.ndarray = (user_factors[useridx] @ item_factors.T)
-#     users_preference[csr[useridx].nonzero()[1]] = float('-inf')
-#     top10_i = users_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
-#     top10_itemid = [ i_item[i] for i in top10_i if i in i_item ]
+LABEL_CNT = 10
 
-#     user_reco = []
-#     for id, name, description in df[df['id'].isin(top10_itemid)][['id','name','description']].values:
-#         user_reco.append( {'id': id, 'name': name, 'description': description} )
+@router.post("/recten", description="Top10 recipes를 요청합니다")
+async def return_top10_recipes(data: UseridRequest):
+    userid = data.userid
 
-#     return Top10RecipesResponse(lists = user_reco)
+    user_preference: np.ndarray = (user_factors[userid] @ item_factors.T)
+    interacted_recipes = pd.read_sql(f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine)['recipe_id']
+    interacted_recipes = [ rid for rid in interacted_recipes if rid < user_preference.shape[0] ]
+    user_preference[interacted_recipes] = float('-inf')
+    top10_itemid = user_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
+
+    # df를 메모리에 올릴지, 쿼리해서 줄지 고민. 현재는 메모리에 올림.
+    user_reco = []
+    for id, name, description in df[df['id'].isin(top10_itemid)][['id','name','description']].values:
+        user_reco.append( {'id': id, 'name': name, 'description': description} )
+
+    return Top10RecipesResponse(lists = user_reco)
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
