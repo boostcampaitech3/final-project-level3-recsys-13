@@ -38,6 +38,11 @@ class SignUpRequest(BaseModel):
     password: str
 
 
+class GeneralRequest(BaseModel):
+    qeury: str
+    detail: str
+
+
 class GeneralResponse(BaseModel):
     state: str
     detail: str
