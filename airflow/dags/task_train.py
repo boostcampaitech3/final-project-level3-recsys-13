@@ -1,12 +1,13 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
 from datetime import datetime, timedelta
 import pendulum
 # def func_train():
 #     import sys,os
 #     sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.getcwd())))+"/modeling")
-import train
+# import train
+import requests
 
 
 # 앞의 03-python-operator-with-context는 provide_context=True 옵션을 주고 Attribute에 접근
@@ -26,25 +27,91 @@ default_args = {
     "retry_delay" : timedelta(minutes = 5) #만약 실패시 5분 뒤 재실행
 }
 
+def confirm_data():
+    #0 이면 not change 1이면 train
+    #flag = requests.post()
+    print("confirm_data")
+    flag = 1
+    change_branchs = ["not_change", "train_start"]
+    return change_branchs[flag]
 
+def not_change():
+    print("notchange:notchangeeeee")
 
+def train():
+    print("train:trainnnnnnn")
+
+def train_modelA():
+    print("trainA:AAAAAA")
+
+def train_modelB():
+    print("train_modelB:BBBBB")
+
+def train_complete():
+    #0 이면 not change 1이면 train
+    #flag = requests.post()
+    print("train_complete:trccccccc")
+    flag = 1
+    change_branchs = ["save_storage", "find_bestmodel"]
+    return change_branchs[flag]
+
+def save_storage():
+    print("train_storage:tstststs")
+
+def find_bestmodel():
+    print("find_bestmodel:fbfbfbfb")
 # with 구문으로 DAG 정의
 with DAG(
-    dag_id='train',
+    dag_id='train_start',
     default_args=default_args,
     schedule_interval = '0 0/2 * * *',
     tags=['boostcamp_ai_final']
 )as dag:
 
+    task_confirm_data = BranchPythonOperator(
+        task_id = "confirm_data",
+        python_callable = confirm_data
+        
+    )
     # import_task = BashOperator(
     #     task_id="command",
     #     bash_command = "echo hihi ; pwd",
     #     owner = "jinsu"
     # )
+    task_not_change = PythonOperator(
+        task_id="not_change",
+        python_callable = not_change
+    )
 
-    python_task_train = PythonOperator(
-        task_id='train',
+    task_train_start = PythonOperator(
+        task_id='train_start',
         python_callable=train,
     )
 
-    python_task_train
+    task_train_modelA = PythonOperator(
+        task_id="train_modelA",
+        python_callable=train_modelA
+    )
+    
+    task_train_modelB = PythonOperator(
+        task_id="train_modelB",
+        python_callable=train_modelB
+    )
+
+    task_complete = BranchPythonOperator(
+        task_id="complete",
+        python_callable = train_complete
+    )
+
+    task_save_Storage = PythonOperator(
+        task_id="save_storage",
+        python_callable=save_storage
+    )
+
+    task_find_bestmodel = PythonOperator(
+        task_id="find_bestmodel",
+        python_callable=find_bestmodel
+    )
+
+    task_confirm_data >> [task_train_start, task_not_change] 
+    task_train_start >> [task_train_modelA, task_train_modelB] >> task_complete >> [task_save_Storage, task_find_bestmodel]

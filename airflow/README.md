@@ -2,6 +2,9 @@
     pip install pip --upgrade
     pip install 'apache-airflow==2.2.0'
 
+- 실행 위치
+    cd airfow
+
     export AIRFLOW_HOME=.
     export PYTHONPATH=$PYTHONPATH:/opt/ml/~~~/final-project-level3-recsys-13/modeling/
 
@@ -13,4 +16,5 @@
 
         다른 터미널열어서
             export AIRFLOW_HOME=.
+            export PYTHONPATH=$PYTHONPATH:/opt/ml/~~~/final-project-level3-recsys-13/modeling/
             airflow scheduler
