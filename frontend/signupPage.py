@@ -11,7 +11,7 @@ def signupPage():
             st.write("비밀번호가 일치하지 않습니다.")
         else:
             #TODO : url변경
-            canSignup = requests.post("http://localhost:30002/signup", json={"name":name, "password":password1}).json()
+            canSignup = requests.post("http://localhost:30002/api/v1/signup", json={"name":name, "password":password1}).json()
 
             if canSignup["state"]=="Approved":
                 st.session_state.page = "recommendPage"
