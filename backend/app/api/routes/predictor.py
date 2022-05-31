@@ -6,7 +6,7 @@ import joblib
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from schema.prediction import GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
+from schema.prediction import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
 from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
@@ -17,7 +17,7 @@ import time
 from core.config import DATABASE_URL, GOOGLE_APPLICATION_CREDENTIALS
 
 from google.cloud import storage
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=GOOGLE_APPLICATION_CREDENTIALS
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 
 router = APIRouter()
 
@@ -60,13 +60,15 @@ def get_db_engine():
 
 # 연결
 engine = get_db_engine()
-
-df = pd.read_sql("select * from public.recipes", engine)
+interaction_modified = False
+df = pd.read_sql("select * from public.recipes_df", engine)
 
 storage_client = storage.Client()
 bucket = storage_client.bucket('foodcom_als_models')
-bucket.blob('_als_itemfactors.npy').download_to_filename('_als_itemfactors.npy')
-bucket.blob('_als_userfactors.npy').download_to_filename('_als_userfactors.npy')
+bucket.blob('_als_itemfactors.npy').download_to_filename(
+    '_als_itemfactors.npy')
+bucket.blob('_als_userfactors.npy').download_to_filename(
+    '_als_userfactors.npy')
 
 
 user_factors: np.ndarray = np.load("_als_userfactors.npy")
@@ -74,22 +76,25 @@ item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 
 LABEL_CNT = 10
 
+
 @router.post("/recten", description="Top10 recipes를 요청합니다")
 async def return_top10_recipes(data: UseridRequest):
     userid = data.userid
 
     user_preference: np.ndarray = (user_factors[userid] @ item_factors.T)
-    interacted_recipes = pd.read_sql(f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine)['recipe_id']
-    interacted_recipes = [ rid for rid in interacted_recipes if rid < user_preference.shape[0] ]
+    interacted_recipes = pd.read_sql(
+        f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine)['recipe_id']
+    interacted_recipes = [
+        rid for rid in interacted_recipes if rid < user_preference.shape[0]]
     user_preference[interacted_recipes] = float('-inf')
     top10_itemid = user_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
 
     # df를 메모리에 올릴지, 쿼리해서 줄지 고민. 현재는 메모리에 올림.
     user_reco = []
-    for id, name, description in df[df['id'].isin(top10_itemid)][['id','name','description']].values:
-        user_reco.append( {'id': id, 'name': name, 'description': description} )
+    for id, name, description in df[df['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
+        user_reco.append({'id': id, 'name': name, 'description': description})
 
-    return Top10RecipesResponse(lists = user_reco)
+    return Top10RecipesResponse(lists=user_reco)
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
@@ -195,6 +200,7 @@ async def return_answer(data: RateRequest):
                 'cold_start': sqlalchemy.types.BOOLEAN()
             }
         )
+        interaction_modified = True
     return GeneralResponse(state='Approved', detail='Saved Interaction')
 
 
@@ -260,3 +266,19 @@ async def return_answer(data: SignInRequest):
             return GeneralResponse(state='Denied', detail='wrong password')
     else:
         return GeneralResponse(state='Denied', detail='format error')
+
+
+@router.get("/modcheck", description="interaction에 추가된 데이터가 있는지 검사합니다.")
+async def return_answer():
+    if interaction_modified:
+        return GeneralResponse(state='True', detail='interaction modified')
+    else:
+        return GeneralResponse(state='False', detail='interaction not modified')
+
+
+@router.post("/updatemodel", description="inference matrix를 업데이트된 정보로 변경합니다.")
+async def return_answer(data: GeneralRequest):
+    if interaction_modified:
+        return GeneralResponse(state='True', detail='interaction modified')
+    else:
+        return GeneralResponse(state='False', detail='interaction not modified')
