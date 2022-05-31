@@ -19,7 +19,7 @@ def authenticate(name, password):
     # TODO : url 변경
     # 성공 시 10개 추천 레시피 받기
     # 실패 시 오류 메시지 출력
-    cansignin = requests.post("http://localhost:30002/signin", json={"name":name, "password":password}).json()
+    cansignin = requests.post("http://localhost:30002/api/v1/signin", json={"name":name, "password":password}).json()
     if cansignin["state"]=="Approved":
         # return {"lists":[{"name":i, "description":str(i)} for i in range(10)]}
         return True
@@ -44,7 +44,7 @@ def login():
         st.session_state.page = "signupPage"
         st.experimental_rerun()
 
-    if type(st.session_state.response) == True:
+    if st.session_state.response == True:
         st.session_state.page = "recommendPage"
         st.experimental_rerun()
 
