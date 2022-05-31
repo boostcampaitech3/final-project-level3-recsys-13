@@ -1,6 +1,7 @@
 from starlette.config import Config
+from starlette.datastructures import CommaSeparatedStrings, Secret
 
-config = Config(".env")
+config = Config("./core/.env")
 
 POSTGRES_USER = config("POSTGRES_USER", cast=str)
 POSTGRES_PASSWORD = config("POSTGRES_PASSWORD", cast=Secret)
