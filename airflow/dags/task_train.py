@@ -51,9 +51,6 @@ def train_complete():
     #0 이면 not change 1이면 train
     #flag = requests.post()
     print("train_complete:trccccccc")
-    flag = 1
-    change_branchs = ["save_storage", "find_bestmodel"]
-    return change_branchs[flag]
 
 def save_storage():
     print("train_storage:tstststs")
@@ -98,7 +95,7 @@ with DAG(
         python_callable=train_modelB
     )
 
-    task_complete = BranchPythonOperator(
+    task_complete = PythonOperator(
         task_id="complete",
         python_callable = train_complete
     )
