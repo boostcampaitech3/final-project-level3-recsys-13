@@ -66,6 +66,7 @@ df = pd.read_sql("select * from public.recipes_df", engine)
 
 LABEL_CNT = 10
 
+
 def model_download(item_dir, user_dir):
     storage_client = storage.Client()
     bucket = storage_client.bucket('foodcom_als_models')
@@ -100,7 +101,6 @@ async def return_top10_recipes(data: UseridRequest):
         user_reco.append({'id': id, 'name': name, 'description': description})
 
     return Top10RecipesResponse(lists=user_reco)
-
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
@@ -264,7 +264,8 @@ async def return_answer(data: SignUpRequest):
 
 @router.post("/signin", description="로그인을 요청합니다")
 async def return_answer(data: SignInRequest):
-    if re.match('^[a-z0-9]+$', data.name) and re.match('^[a-z0-9]+$', data.password):
+    names = set(pd.read_sql("select name from public.user_data", engine))
+    if data.name in names:
         user_data = pd.read_sql(
             f"select * from public.user_data where  name = '{data.name}';", engine)
         if str(user_data['password'].item()) == data.password:
@@ -272,7 +273,7 @@ async def return_answer(data: SignInRequest):
         else:
             return GeneralResponse(state='Denied', detail='wrong password')
     else:
-        return GeneralResponse(state='Denied', detail='format error')
+        return GeneralResponse(state='Denied', detail='undefined name')
 
 
 @router.get("/modcheck", description="interaction에 추가된 데이터가 있는지 검사합니다.")
