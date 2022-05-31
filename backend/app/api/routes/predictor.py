@@ -9,10 +9,6 @@ from loguru import logger
 from schema.prediction import GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
 from services.predict import MachineLearningModelHandlerScore as model
 
-
-
-import scipy.sparse as sp
-import pickle
 import numpy as np
 import pandas as pd
 import re
