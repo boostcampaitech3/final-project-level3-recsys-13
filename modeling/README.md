@@ -34,10 +34,21 @@
 - train에서는 모델 학습 및 wandb 로그 저장만 진행되며, inference는 따로 구현되어 있음.
 
 ### Inference  
-- inference 커맨드 : train과 같음
-- infernce.py는 모델을 모든 데이터로 학습시키고, 결과를 google storage로 전송시킵니다.
+- **inference 하기 전**
+    - 다음 쉘 커맨드로 batch tag 업데이트(batch tag는 최근 업데이트된 모델을 구별하주는 역할을 합니다.)
+    - `python inference.py --update_batch_tag`
+- inference : 커맨드는 train과 같음
+    - infernce.py는 모델을 모든 데이터로 학습시키고, 결과를 google storage로 전송시킵니다.
+    - storage 모델 저장: {~모델이름 혹은 factors~}_{batch tag}
+        - ex) item_factors_1.npy
+        - ex) user_factors_1.npy
+
+- **inference 한 후**
+    - 다음 쉘 커맨드로 최근 batch tag를 가진 모델 중 가장 높은 recall을 가진 모델의 이름과 태그를 db에 저장합니다. 
+    - `python inference.py --inference_info`
 
 ## TODO
+- airflow: 배치 단위 학습
+    - 쉘 스크립트 작성
+    - airflow 코드 작성
 - torch 모델 추가
-- airflow: 배치 단위 학습  
-: 데이터 업데이트 시 쉘 커맨드 등을 활용하여 모든 모델 train(및 기록) 맟 inference.
