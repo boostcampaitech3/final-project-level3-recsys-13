@@ -64,6 +64,8 @@ interaction_modified = False
 df = pd.read_sql("select * from public.recipes_df", engine)
 
 
+LABEL_CNT = 10
+
 def model_download(item_dir, user_dir):
     storage_client = storage.Client()
     bucket = storage_client.bucket('foodcom_als_models')
@@ -98,6 +100,7 @@ async def return_top10_recipes(data: UseridRequest):
         user_reco.append({'id': id, 'name': name, 'description': description})
 
     return Top10RecipesResponse(lists=user_reco)
+
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
