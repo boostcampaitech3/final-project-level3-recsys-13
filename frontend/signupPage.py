@@ -16,7 +16,7 @@ def signupPage():
             if canSignup["state"]=="Approved":
                 st.session_state.page = "recommendPage"
                 st.experimental_rerun()
-            elif canSignup["detail"]=="duploicate error":
+            elif canSignup["detail"]=="duplicate error":
                 st.write("중복된 아이디입니다.")
             else:
                 st.write("잘못된 형식입니다.")
