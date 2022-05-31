@@ -6,7 +6,7 @@ import joblib
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from schema.prediction import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest
+from schema.prediction import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, ModelUpdateRequest
 from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
@@ -63,14 +63,17 @@ engine = get_db_engine()
 interaction_modified = False
 df = pd.read_sql("select * from public.recipes_df", engine)
 
-storage_client = storage.Client()
-bucket = storage_client.bucket('foodcom_als_models')
-bucket.blob('_als_itemfactors.npy').download_to_filename(
-    '_als_itemfactors.npy')
-bucket.blob('_als_userfactors.npy').download_to_filename(
-    '_als_userfactors.npy')
+
+def model_download(item_dir, user_dir):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket('foodcom_als_models')
+    bucket.blob(item_dir).download_to_filename(
+        '_als_itemfactors.npy')
+    bucket.blob(user_dir).download_to_filename(
+        '_als_userfactors.npy')
 
 
+model_download('_als_itemfactors.npy', '_als_userfactors.npy')
 user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 
@@ -99,6 +102,7 @@ async def return_top10_recipes(data: UseridRequest):
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
 async def return_answer(data: RateRequest):
+    global interaction_modified
     user_data = pd.read_sql(
         f"select * from public.user_data where user_id = {data.user_id};", engine)
     full_user_data = pd.read_sql(f"select * from public.user_data;", engine)
@@ -277,8 +281,5 @@ async def return_answer():
 
 
 @router.post("/updatemodel", description="inference matrix를 업데이트된 정보로 변경합니다.")
-async def return_answer(data: GeneralRequest):
-    if interaction_modified:
-        return GeneralResponse(state='True', detail='interaction modified')
-    else:
-        return GeneralResponse(state='False', detail='interaction not modified')
+async def return_answer(data: ModelUpdateRequest):
+    model_download(data.item_factor, data.user_factor)

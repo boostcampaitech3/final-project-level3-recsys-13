@@ -43,6 +43,12 @@ class GeneralRequest(BaseModel):
     detail: str
 
 
+class ModelUpdateRequest(BaseModel):
+    qeury: str
+    user_factor: str
+    item_factor: str
+
+
 class GeneralResponse(BaseModel):
     state: str
     detail: str
