@@ -61,7 +61,6 @@ def recommend(model, user_item_matrix, args):
             
 
 def run(args, train_data: csr_matrix, user_item_matrix: pd.DataFrame, test_data: list):  # train_df, user_ids, recipe_ids
-    wandb.init(project='foodcom', entity='boostcamp-relu')
     wandb.config.update(args)
     wandb.run.name='als_exp'
     torch.cuda.empty_cache()

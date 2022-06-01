@@ -16,8 +16,6 @@ from foodcomItem2Vec.bert2vec import bert2vec
 from utils import setSeeds
 
 def main(args):
-    #wandb.login()
-    #wandb.init(project="food_reco", config=vars(args))
 
     # basic settings
     KST = timezone(timedelta(hours=9))
@@ -33,6 +31,9 @@ def main(args):
 
     # model
     if args.model == "als":
+        wandb.login()
+        wandb.init(project='foodcom')
+        
         now = datetime.now(KST).strftime('%Y-%m-%d_%H:%M:%S')
         print(f'als ! [start time: {now}]')
         train_data, user_item_matrix, test_data = foodcomImplicit.dataset.read_data(args)
