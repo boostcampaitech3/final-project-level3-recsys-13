@@ -13,4 +13,4 @@ RUN pip install --upgrade pip && \
 
 COPY . ./
 ENV PYTHONPATH app
-ENTRYPOINT ["poetry", "run", "streamlit", "run", "frontend.py", "--server.port=30001"]
+ENTRYPOINT ["poetry", "run", "streamlit", "run", "main.py", "--server.port=30001"]

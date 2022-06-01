@@ -61,7 +61,7 @@ def get_db_engine():
 # 연결
 engine = get_db_engine()
 interaction_modified = False
-df = pd.read_sql("select * from public.recipes_df", engine)
+df = pd.read_sql("select * from public.recipes", engine)
 
 
 LABEL_CNT = 10
@@ -134,7 +134,7 @@ async def return_answer(data: RateRequest):
                 }
             )
             interaction.to_sql(
-                name='interactions_df',
+                name='interactions',
                 con=engine,
                 schema='public',
                 if_exists='append',
@@ -175,7 +175,7 @@ async def return_answer(data: RateRequest):
             }
         )
         interaction.to_sql(
-            name='interactions_df',
+            name='interactions',
             con=engine,
             schema='public',
             if_exists='append',
@@ -264,7 +264,7 @@ async def return_answer(data: SignUpRequest):
 
 @router.post("/signin", description="로그인을 요청합니다")
 async def return_answer(data: SignInRequest):
-    names = set(pd.read_sql("select name from public.user_data", engine))
+    names = set(pd.read_sql("select name from public.user_data", engine)['name'])
     if data.name in names:
         user_data = pd.read_sql(
             f"select * from public.user_data where  name = '{data.name}';", engine)

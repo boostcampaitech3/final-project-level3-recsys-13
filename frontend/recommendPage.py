@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from config import API_DEST
 
 ingredients = []
 def recommendPage():
@@ -38,7 +39,7 @@ def recommendPage():
     if st.button("추천"):
         st.session_state.recommend = 1
         # TODO : url 변경, 재료 입력받기 및 추천정보 받기 API 필요 
-        st.session_state.response = requests.post("http://localhost:30002/api/v1/recten", json={"userid":int(st.session_state.user_id)}).json()
+        st.session_state.response = requests.post(f"{API_DEST}/api/v1/recten", json={"userid":int(st.session_state.user_id)}).json()
         # 아래는 임시 recipes 정보입니다.
         st.session_state.recipes = {"lists":[{"name":i, "description":str(i)} for i in range(10)]}
     
@@ -54,7 +55,7 @@ def recommendPage():
         if st.button("평점 남기기"):
             # TODO : url 변경
             try:
-                recommended = requests.post("http://localhost:30002/api/v1/score", json={"rate":float(rate)}).json()
+                recommended = requests.post(f"{API_DEST}/api/v1/score", json={"rate":float(rate)}).json()
                 recommended = rate
                 st.write(recommended)
             except:

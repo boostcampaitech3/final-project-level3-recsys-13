@@ -30,7 +30,7 @@ install:
 	poetry install
 
 run:
-	PYTHONPATH=app/ poetry run streamlit run homePage.py --server.port=30001
+	PYTHONPATH=app/ poetry run streamlit run main.py --server.port=30001
 
 deploy: generate_dot_env
 	docker-compose build

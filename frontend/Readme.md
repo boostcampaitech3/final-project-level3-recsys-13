@@ -2,7 +2,8 @@ frontend
 1. 실행하기
     Server부터 켜야합니다.
 
-    streamlit run frontend/homePage.py --server.port=30001
+    cd frontend
+    make run
     
     터미널에서 External URL 링크 클릭
 
