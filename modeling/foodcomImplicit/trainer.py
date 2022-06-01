@@ -102,7 +102,6 @@ def run_inference(args, train_data: csr_matrix):
     print('training...')
     model = get_model(args)
     for epoch in range(args.n_epochs):
-        print('# Epoch {}: '.format(epoch), end='')
         model.fit(train_data, show_progress=False)
         
     if isinstance(model.user_factors, np.ndarray):

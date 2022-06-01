@@ -10,6 +10,11 @@ def parse_args():
     parser.add_argument("--n_epochs", default=5, type=int, help="iter n")
     parser.add_argument("--device", default='cuda', type=str, help="cuda or cpu")
     
+    # inference settings
+    parser.add_argument("--inference_info", action='store_true')  # 해당 인자를 입력하면 True로 작용하여 best모델 정보 업데이트
+    parser.add_argument("--update_batch_tag", action='store_true')  # 해당 인자를 입력하면 True로 작용하여 db의 batch tag 숫자 업데이트
+    
+    
     ## make subparsers
     subparsers = parser.add_subparsers(dest='model')
     parser_als = subparsers.add_parser(name='als')

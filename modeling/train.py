@@ -1,9 +1,13 @@
 import os
 import torch
+import pandas as pd
 import wandb
 from args import parse_args
 import warnings
 from datetime import datetime, timezone, timedelta
+
+import sqlalchemy
+from dataloader import get_db_engine
 
 import foodcomTorch
 import foodcomImplicit
@@ -21,6 +25,11 @@ def main(args):
     setSeeds(args.seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.device = device
+    
+    engine = get_db_engine()
+    meta_data = pd.read_sql(f"select * from public.meta_data", engine)
+    batch_tag = meta_data['batch_tag'].item()
+    args.batch_tag = batch_tag
 
     # model
     if args.model == "als":
