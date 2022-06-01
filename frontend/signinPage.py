@@ -1,17 +1,7 @@
 import streamlit as st
-
-import io
-import os
-import yaml
-import random
-import string
-
-from confirm_button_hack import cache_on_button_press
-# from model.args import parse_args
-# from model.dataloader import Preprocess
-# from model.model import LSTM, LSTMATTN, Bert
-# from model import trainer
 import requests
+from config import API_DEST
+
 # SETTING PAGE CONFIG TO WIDE MODE
 st.set_page_config(layout="wide")
 
@@ -19,7 +9,7 @@ def authenticate(name, password):
     # TODO : url 변경
     # 성공 시 10개 추천 레시피 받기
     # 실패 시 오류 메시지 출력
-    cansignin = requests.post("http://localhost:30002/api/v1/signin", json={"name":name, "password":password}).json()
+    cansignin = requests.post(f"{API_DEST}/api/v1/signin", json={"name":name, "password":password}).json()
     if cansignin["state"]=="Approved":
         # return {"lists":[{"name":i, "description":str(i)} for i in range(10)]}
         return int(cansignin["detail"])

@@ -8,6 +8,7 @@ authors = ["SNMHZ <snmhz325@gmail.com>"]
 python = "3.8.5"
 streamlit = "^1.9.2"
 PyYAML = "^6.0"
+python-dotenv = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 
