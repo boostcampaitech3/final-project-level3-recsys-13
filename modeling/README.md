@@ -3,16 +3,19 @@
 
 ## How To Use
 ### setting
-- (OpenBLAS Warning이 나오는 경우)
-    - 쉘에 `export OPENBLAS_NUM_THREADS=1`
-- CUDA 설치
-    - `conda config --append channels conda-forge`
-    - `conda install cudatoolkit=11.2 -c conda-forge`
-    - `conda install cudatoolkit-dev=11.2 -c conda-forge`
-- 'modeling/core/에 db관련 키 파일 넣기
+- 쉘에 다음 커맨드를 입력하여 make를 설치해주세요
+    - `apt-get install gcc make`
+- 새로운 가상환경을 만들고, 진입해주세요.
+    - `conda create -n {가상환경이름} python=3.8`
+    - `conda activate {가상환경이름}`  
+    (or `source activate {가상환경이름}`)
+- final-project-level3-recsys-13/modeling 폴더로 진입하여 다음 쉘 명령어를 입력해주세요.
+    - `make install`
+    - `make run_trigger`
+- 'final-project-level3-recsys-13/modeling/core 폴더에 db관련 키 파일 넣기
     - .env : db연결을 위한 key
     - storage.json : storage 연결을 위한 key
-- 'modeling/core/에 storage 관련 json파일 넣기
+- 'final-project-level3-recsys-13/modeling/core 폴더에 storage 관련 json파일 넣기
     - storage.json
 - shell에 `wandb init`
     - API key 입력
@@ -48,7 +51,4 @@
     - `python inference.py --inference_info`
 
 ## TODO
-- airflow: 배치 단위 학습
-    - 쉘 스크립트 작성
-    - airflow 코드 작성
 - torch 모델 추가
