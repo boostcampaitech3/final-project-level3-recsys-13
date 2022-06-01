@@ -24,7 +24,7 @@ all: clean test install run deploy down easter
 test:
 	poetry run pytest tests -vv --show-capture=all
 
-install: generate_dot_env
+install:
 	pip install --upgrade pip
 	pip install poetry
 	poetry install
