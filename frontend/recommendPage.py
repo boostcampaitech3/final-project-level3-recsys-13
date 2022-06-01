@@ -7,7 +7,6 @@ def recommendPage():
         st.session_state.recommend = ""
     
     st.title("추천 레시피 정보 입력")
-    st.title(st.session_state.user_id)
     # userid = st.text_input("유저 아이디")
     datum = st.multiselect("필요 정보를 입력해주세요", options = ["재료", "칼로리", "지방", "설탕", "나트륨", "단백질", "포화 지방", "탄수화물"
     , "제조 시간", "제조 과정 수"])
@@ -42,7 +41,6 @@ def recommendPage():
         st.session_state.response = requests.post("http://localhost:30002/api/v1/recten", json={"userid":int(st.session_state.user_id)}).json()
         # 아래는 임시 recipes 정보입니다.
         st.session_state.recipes = {"lists":[{"name":i, "description":str(i)} for i in range(10)]}
-        st.title(st.session_state.user_id)
     
     if st.session_state.recommend==1:
         st.title("Top10 레시피")
