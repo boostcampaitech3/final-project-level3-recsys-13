@@ -33,7 +33,7 @@ def main(args):
     
     # best_model update in db <<after inference>>
     if args.inference_info:
-        run_df = wandb_download
+        run_df = wandb_download()
         best_model_str = best_model_finder(run_df)
         
         meta_data = pd.read_sql(f"select * from public.meta_data", engine)
