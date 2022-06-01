@@ -38,6 +38,17 @@ class SignUpRequest(BaseModel):
     password: str
 
 
+class GeneralRequest(BaseModel):
+    qeury: str
+    detail: str
+
+
+class ModelUpdateRequest(BaseModel):
+    qeury: str
+    user_factor: str
+    item_factor: str
+
+
 class GeneralResponse(BaseModel):
     state: str
     detail: str
