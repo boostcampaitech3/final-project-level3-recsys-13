@@ -12,7 +12,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build the Docker image
+    - name: get branch name test
       run: |
-        cd backend
-        docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+        echo running on branch ${GITHUB_REF##*/}
