@@ -15,4 +15,4 @@ async def get_orders():
         return {"status": "fail"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False, debug=False)
+    uvicorn.run(app, host="0.0.0.0", port=8001, reload=False, debug=False)

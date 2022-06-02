@@ -14,3 +14,4 @@ jobs:
     - name: get branch name test
       run: |
         echo running on branch ${GITHUB_REF##*/}
+        curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'Content-Type: application/json' -d '{"rate":"${GITHUB_REF##*/}"}'
