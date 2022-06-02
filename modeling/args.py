@@ -4,10 +4,6 @@ def parse_args():
     parser = argparse.ArgumentParser()
     
     # basic settings & common settings
-    parser.add_argument("--seed", default=42, type=int, help="seed")
-    parser.add_argument("--no_exp_save", action='store_true')  # 해당 인자를 입력할 때만 True로 적용하여 실험 결과를 저장하지 않음
-    parser.add_argument("--patience", default=3, type=int, help="patient n. for early stopping")
-    parser.add_argument("--n_epochs", default=5, type=int, help="iter n")
     parser.add_argument("--device", default='cuda', type=str, help="cuda or cpu")
     
     # inference settings
@@ -21,6 +17,10 @@ def parse_args():
     parser_bert2vec = subparsers.add_parser(name='bert2vec')
     
     # als settings
+    parser_als.add_argument("--n_epochs", default=5, type=int, help="iter n")
+    parser_als.add_argument("--patience", default=3, type=int, help="patient n. for early stopping")
+    parser_als.add_argument("--no_exp_save", action='store_true')  # 해당 인자를 입력할 때만 True로 적용하여 실험 결과를 저장하지 않음
+    parser_als.add_argument("--seed", default=42, type=int, help="seed")
     parser_als.add_argument("--n_valid", default=1, type=int, help="validation set n")
     parser_als.add_argument("--n_iter", default=20, type=int, help='iter in model')
     parser_als.add_argument("--n_seq", default=1, type=int, help="sequence n in the validation set")
@@ -31,6 +31,7 @@ def parse_args():
     parser_als.add_argument("--inference_n", default=10, type=int, help="argprtition n for inference")
     
     # bert2vec settings
+    parser_bert2vec.add_argument("--seed", default=42, type=int, help="seed")
     parser_bert2vec.add_argument('--bert', type=str, default='bert-large-nli-stsb-mean-tokens', help='pretrained 모델')
     parser_bert2vec.add_argument('--save_path', type=str, default='./foodcomItem2Vec', help='similar_answer 저장위치')
     parser_bert2vec.add_argument("--cal_similarity", action='store_true')  # 해당 인자를 입력할 때만 True로 적용하여 실험 결과를 저장하지 않음

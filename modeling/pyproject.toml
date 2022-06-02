@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "modeling"
+version = "0.1.0"
+description = ""
+authors = ["김원섭 <whattsup_kim@naver.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.78.0"
+uvicorn = "^0.17.6"
+pydantic = "^1.9.1"
+SQLAlchemy = "^1.4.37"
+torch = "^1.11.0"
+pandas = "^1.4.2"
+tqdm = "^4.64.0"
+sklearn = "^0.0"
+transformers = "^4.19.2"
+implicit = "^0.5.2"
+sentence-transformers = "^2.2.0"
+wandb = "^0.12.17"
+google = "^3.0.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
