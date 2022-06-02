@@ -8,7 +8,7 @@ app = FastAPI(title="deploy_webhook", debug=False, version="0.1.0")
 isAvailable = True
 
 class Rate(BaseModel):
-    rate : float
+    rate : str
 
 @app.post("/api/v1/deploy_webhook", description="배포 시작 트리거")
 async def get_orders(rate: Rate):
