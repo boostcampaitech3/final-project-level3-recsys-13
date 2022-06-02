@@ -24,6 +24,7 @@
 #     uvicorn.run(app, host="0.0.0.0", port=30003, reload=False, debug=True)
 
 from flask import Flask
+from flask import request
 import subprocess
 
 app = Flask(__name__)
@@ -32,12 +33,17 @@ app = Flask(__name__)
 def deploy_webhook():
     try:
         print('deploy_webhook')
+        print(request.is_json)
+        params = request.get_json()
+        print(params)
         subprocess.call("chmod 777 ./deploy.sh", shell=True)
-        result = subprocess.run(["./deploy.sh"], stdout=subprocess.PIPE, text=True, shell=True)
+        print('chmod 777 ./deploy.sh')
+        result = subprocess.run(["sh deploy.sh"], stdout=subprocess.PIPE, shell=True)
         print(result.stdout)
         return {"result": "success"}
     except Exception as e:
         print(e)
+        print('deploy_webhook error')
         return {"result": "fail"}
 
 if __name__ == "__main__":
