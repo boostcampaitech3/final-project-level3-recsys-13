@@ -6,9 +6,11 @@ import requests
 
 app = FastAPI(title="build_webhook", debug=False, version="0.1.0")
 
+class GeneralRequest(BaseModel):
+    data : str
 
 @app.post("/api/v1/build_webhook", description="빌드 시작 트리거")
-async def build_webhook(general):
+async def build_webhook(general: GeneralRequest):
     try:
         branch_name = general.data
         subprocess.call(f"git checkout {branch_name}", shell=True)
