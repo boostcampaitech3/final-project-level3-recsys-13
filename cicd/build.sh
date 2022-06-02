@@ -1,6 +1,5 @@
 docker-credential-gcr configure-docker
-git pull
-cd backend
+cd ../backend
 docker build . -t gcr.io/stoked-magpie-351406/bedep
 cd ../frontend
 docker build . -t gcr.io/stoked-magpie-351406/fedep
