@@ -6,7 +6,7 @@ import subprocess
 app = FastAPI(title="deploy_webhook", debug=False, version="0.1.0")
 
 class GeneralRequest(BaseModel):
-    branch_name : str
+    data : str
 
 @app.post("/api/v1/deploy_webhook", description="배포 시작 트리거")
 async def deploy_webhook(general: GeneralRequest):
@@ -14,7 +14,7 @@ async def deploy_webhook(general: GeneralRequest):
         subprocess.call("chmod 777 ./deploy.sh", shell=True)
         result = subprocess.run(["./deploy.sh"], stdout=subprocess.PIPE, text=True, shell=True)
         print(result.stdout)
-        print(general.branch_name)
+        print(general.data)
         return {"result": "success"}
     except Exception as e:
         print(e)
