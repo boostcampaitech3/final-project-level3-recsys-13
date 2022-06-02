@@ -36,5 +36,6 @@ jobs:
           echo "Short SHA variables"
           echo "   sha                 : ${{ env.GITHUB_SHA_SHORT }}"
           echo "   pull request sha    : ${{ env.GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT }}"
+          echo "::set-env name=BRANCH_NAME::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')"
           echo running on branch ${GITHUB_REF##*/}
-          curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"rate":"${{ env.GITHUB_REF_SLUG }}"}'
+          curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"rate":"${BRANCH_NAME}"}'
