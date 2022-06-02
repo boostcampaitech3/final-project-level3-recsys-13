@@ -31,6 +31,7 @@ app = Flask(__name__)
 @app.route("/api/v1/deploy_webhook", methods=['POST'])
 def deploy_webhook():
     try:
+        print('deploy_webhook')
         subprocess.call("chmod 777 ./deploy.sh", shell=True)
         result = subprocess.run(["./deploy.sh"], stdout=subprocess.PIPE, text=True, shell=True)
         print(result.stdout)
