@@ -16,6 +16,7 @@ async def get_orders(rate: Rate):
     subprocess.call("chmod 777 ./deploy.sh", shell=True)
     result = subprocess.run(["./deploy.sh"], stdout=subprocess.PIPE, text=True, shell=True)
     print(result.stdout)
+    print(rate.rate)
     if isAvailable:
         isAvailable = False
         return {"status": "success"}
