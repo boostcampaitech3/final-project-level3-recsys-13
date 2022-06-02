@@ -11,6 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Get branch name (merge)
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+
+      - name: Get branch name (pull request)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+
       - uses: rlespinasse/github-slug-action@v4
       - name: get branch name test
         run: |
@@ -36,6 +46,5 @@ jobs:
           echo "Short SHA variables"
           echo "   sha                 : ${{ env.GITHUB_SHA_SHORT }}"
           echo "   pull request sha    : ${{ env.GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT }}"
-          echo "::set-env name=BRANCH_NAME::$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')"
           echo running on branch ${GITHUB_REF##*/}
-          curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"rate":"$(echo ${GITHUB_REF#refs/heads/})"}'
+          curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"rate":"${{ env.BRANCH_NAME }}"}'
