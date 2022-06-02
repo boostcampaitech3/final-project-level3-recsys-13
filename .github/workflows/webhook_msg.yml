@@ -21,30 +21,7 @@ jobs:
         shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
 
-      - uses: rlespinasse/github-slug-action@v4
       - name: get branch name test
         run: |
-          echo "Partial variables"
-          echo "   repository owner    : ${{ env.GITHUB_REPOSITORY_OWNER_PART }}"
-          echo "   repository name     : ${{ env.GITHUB_REPOSITORY_NAME_PART }}"
-          echo "Slug variables"
-          echo "   repository          : ${{ env.GITHUB_REPOSITORY_SLUG }}"
-          echo "   repository owner    : ${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG }}"
-          echo "   repository name     : ${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}"
-          echo "   ref                 : ${{ env.GITHUB_REF_SLUG }}"
-          echo "   head ref            : ${{ env.GITHUB_HEAD_REF_SLUG }}"
-          echo "   base ref            : ${{ env.GITHUB_BASE_REF_SLUG }}"
-          echo "   event ref           : ${{ env.GITHUB_EVENT_REF_SLUG }}"
-          echo "Slug URL variables"
-          echo "   repository          : ${{ env.GITHUB_REPOSITORY_SLUG_URL }}"
-          echo "   repository owner    : ${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG_URL }}"
-          echo "   repository name     : ${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG_URL }}"
-          echo "   ref                 : ${{ env.GITHUB_REF_SLUG_URL }}"
-          echo "   head ref            : ${{ env.GITHUB_HEAD_REF_SLUG_URL }}"
-          echo "   base ref            : ${{ env.GITHUB_BASE_REF_SLUG_URL }}"
-          echo "   event ref           : ${{ env.GITHUB_EVENT_REF_SLUG_URL }}"
-          echo "Short SHA variables"
-          echo "   sha                 : ${{ env.GITHUB_SHA_SHORT }}"
-          echo "   pull request sha    : ${{ env.GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT }}"
-          echo running on branch ${GITHUB_REF##*/}
+          echo running on branch ${{ env.BRANCH_NAME }}
           curl -X POST 'http://115.85.183.238:30003/api/v1/deploy_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"rate":"${{ env.BRANCH_NAME }}"}'
