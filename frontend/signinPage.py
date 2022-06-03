@@ -40,7 +40,7 @@ def login():
         st.experimental_rerun()
 
 def signinPage():
-    st.title("Login - CD test ! 7")
+    st.title("Login - CD test ! 8")
     st.session_state.user_id = -1
     st.title(st.session_state.user_id)
     st.session_state.id = st.text_input('Id')
