@@ -2,7 +2,7 @@ name: Docker Image CD
 
 on:
   push:
-    branches: [ master, dev, f#37 ]
+    branches: [ master, dev, f#45]
 
 jobs:
 
@@ -24,4 +24,4 @@ jobs:
       - name: get branch name test
         run: |
           echo running on branch ${{ env.BRANCH_NAME }}
-          curl -X POST 'http://34.105.22.122:30004/api/v1/build_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"data":"${{ env.BRANCH_NAME }}"}'
+          curl -X POST 'http://34.64.164.234:30004/api/v1/build_webhook' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"data":"${{ env.BRANCH_NAME }}"}'

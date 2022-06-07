@@ -17,7 +17,7 @@ async def build_webhook(general: GeneralRequest):
         subprocess.call("git pull", shell=True)
         subprocess.call("chmod 777 ./build.sh", shell=True)
         result = subprocess.run(["./build.sh"], stdout=subprocess.PIPE, text=True, shell=True)
-        requests.post("http://34.64.137.90:30003/api/v1/deploy_webhook", json={"data":'go'}).json()
+        requests.post("http://34.64.227.56:30003/api/v1/deploy_webhook", json={"data":'go'}).json()
         print(result.stdout)
         print(branch_name)
         return {"result": "success"}
