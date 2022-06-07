@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 import os
 import joblib
@@ -57,6 +57,25 @@ def get_db_engine():
     #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
     return engine  # , meta
 
+def ingredient_filter(recipes: pd.DataFrame, ingredients: list, use: bool):
+    if use == True:
+        l = "|".join(ingredients)
+        filtered = recipes[~recipes.ingredients.str.contains(l)]
+    elif use == "and":
+        text = '^' + ''.join(fr'(?=.*{w})' for w in ingredients)
+        filtered = recipes[~recipes['ingredients'].str.contains(text)]
+    return filtered.id.values
+
+# 영양소 필터링
+def nutrition_filter(recipes: pd.DataFrame, min_calories: float, max_calories: float, min_carbohydrates: float, max_carbohydrates: float, min_protein: float, max_protein: float, min_fat: float, max_fat: float):
+    filtered = recipes[
+        (recipes['calories'] < min_calories) | (recipes['calories'] > max_calories)
+     | (recipes['carbohydrates (PDV)'] < min_carbohydrates) | (recipes['carbohydrates (PDV)'] > max_carbohydrates)
+     | (recipes['protein (PDV)'] < min_protein) | (recipes['protein (PDV)'] > max_protein)
+     | (recipes['total fat (PDV)'] < min_fat) | (recipes['total fat (PDV)'] > max_fat)
+     ]
+    return filtered.id.values
+
 
 # 연결
 engine = get_db_engine()
@@ -67,7 +86,7 @@ df = pd.read_sql("select * from public.recipes", engine)
 LABEL_CNT = 10
 
 storage_client = storage.Client()
-bucket = storage_client.bucket('foodcom_als_models')
+bucket = storage_client.bucket('foodcom_als_model')
 # bucket.blob('theme.npy').download_to_filename(
 #         'theme.npy')
 # bucket.blob('theme_title.npy').download_to_filename(
@@ -85,19 +104,40 @@ user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 theme = np.load('./theme.npy', allow_pickle=True).item()
 theme_titles = np.load('./theme_title.npy', allow_pickle=True).item()
+use_oven_recipe_ids = np.load('./use_oven_recipe_ids.npy')
 LABEL_CNT = 10
 
 
 @router.post("/recten", description="Top10 recipes를 요청합니다")
 async def return_top10_recipes(data: UseridRequest):
     userid = data.userid
+    withoven = data.withoven
+    ingredients = data.ingredients
+    ingredient_use = data.ingredient_use
+    min_calories, max_calories = data.calories
+    min_carbohydrates, max_carbohydrates = data.carbohydrates
+    min_protein, max_protein = data.protein
+    min_fat, max_fat = data.fat
 
     user_preference: np.ndarray = (user_factors[userid] @ item_factors.T)
     interacted_recipes = pd.read_sql(
         f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine)['recipe_id']
+
+    # 사용한 레시피
     interacted_recipes = [
         rid for rid in interacted_recipes if rid < user_preference.shape[0]]
-    user_preference[interacted_recipes] = float('-inf')
+    # 재료 필터
+    ingredients_filtered_recipes = ingredient_filter(df, ingredients, ingredient_use)
+    # 영양소 필터
+    nutrition_filtered_recipes = nutrition_filter(df, min_calories, max_calories,min_carbohydrates, max_carbohydrates, min_protein, max_protein, min_fat, max_fat)
+
+    # 오븐 유무
+    if withoven:
+        total_filter = set(interacted_recipes) | set(ingredients_filtered_recipes) | set(nutrition_filtered_recipes)
+    else:
+        total_filter = set(interacted_recipes) | set(ingredients_filtered_recipes) | set(nutrition_filtered_recipes) | set(use_oven_recipe_ids)
+
+    user_preference[list(total_filter)] = float('-inf')
     top10_itemid = user_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
 
     # df를 메모리에 올릴지, 쿼리해서 줄지 고민. 현재는 메모리에 올림.

@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
 class MachineLearningResponse(BaseModel):
@@ -16,6 +15,14 @@ class UseridRequest(BaseModel):
     # uuid : 고유 식별자, Universally Unique Identifier
     userid: int
     # description: Optional[str] = None
+    withoven: bool # 오븐 유무
+    ingredients: list # 재료
+    ingredient_use: bool # 선택한 재료 중 만들수 있는 레시피 True, 선택한 재료를 모두 사용하는 레시피 False
+    calories: list # 칼로리 최소, 최대
+    carbohydrates: list # 탄수화물 최소, 최대
+    protein: list # 단백질 최소, 최대
+    fat: list # 지방 최소, 최대
+
 
 
 class Top10RecipesResponse(BaseModel):
