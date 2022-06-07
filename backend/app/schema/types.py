@@ -64,8 +64,8 @@ class SignInResponse(BaseModel):
     state: str
     user_id: str
     name: str
-    interactions: list
-    scores: list
+    interactions: List[int]
+    scores: List[int]
     interaction_count: int
     is_cold: bool
 
@@ -79,12 +79,12 @@ class NumThemes(BaseModel):
     num: int
 
 
-class ThemeSamples(BaseModel):
-    theme_title: str
-    samples: list
-
-
 class ThemeSample(BaseModel):
     id: int
     title: str
     image: str
+
+
+class ThemeSamples(BaseModel):
+    theme_title: str
+    samples: List[ThemeSample]
