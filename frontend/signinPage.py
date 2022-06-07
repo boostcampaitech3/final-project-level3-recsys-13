@@ -12,7 +12,7 @@ def authenticate(name, password):
     cansignin = requests.post(f"{API_DEST}/api/v1/signin", json={"name":name, "password":password}).json()
     if cansignin["state"]=="Approved":
         # return {"lists":[{"name":i, "description":str(i)} for i in range(10)]}
-        return int(cansignin["detail"])
+        return [int(cansignin["user_id"]),cansignin["is_cold"]]
     elif cansignin["detail"]=="wrong password":
         st.write("잘못된 password 입니다.")
     else:
@@ -30,14 +30,18 @@ def login():
         st.session_state.password = ""
 
     if st.button("sign in", key="confirm_button"):
-        st.session_state.user_id = authenticate(st.session_state.id, st.session_state.password)
+        st.session_state.user_id, st.session_state.cold = authenticate(st.session_state.id, st.session_state.password)
     if st.button("sign up", key = "signup_button"):
         st.session_state.page = "signupPage"
         st.experimental_rerun()
 
     if st.session_state.user_id != -1:
-        st.session_state.page = "recommendPage"
-        st.experimental_rerun()
+        if st.session_state.cold == True:
+            st.session_state.page = "recThemePage"
+            st.experimental_rerun()
+        else:
+            st.session_state.page = "recommendPage"
+            st.experimental_rerun()
 
 def signinPage():
     st.title("Login - CD test ! 10")

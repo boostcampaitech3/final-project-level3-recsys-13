@@ -48,7 +48,27 @@ class ModelUpdateRequest(BaseModel):
     user_factor: str
     item_factor: str
 
+class SignInResponse(BaseModel):
+    state: str
+    user_id: str
+    is_cold: bool
+    
 
 class GeneralResponse(BaseModel):
     state: str
     detail: str
+
+
+class NumThemes(BaseModel):
+    num: int
+
+
+class ThemeSamples(BaseModel):
+    theme_title: str
+    samples: list
+
+
+class ThemeSample(BaseModel):
+    id: int
+    title: str
+    image: str

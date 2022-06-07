@@ -6,7 +6,7 @@ import joblib
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from schema.prediction import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, ModelUpdateRequest
+from schema.types import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, SignInResponse, ModelUpdateRequest, NumThemes, ThemeSample, ThemeSamples
 from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
@@ -66,20 +66,25 @@ df = pd.read_sql("select * from public.recipes", engine)
 
 LABEL_CNT = 10
 
+storage_client = storage.Client()
+bucket = storage_client.bucket('foodcom_als_models')
+# bucket.blob('theme.npy').download_to_filename(
+#         'theme.npy')
+# bucket.blob('theme_title.npy').download_to_filename(
+#         'theme_title.npy')
 
-def model_download(item_dir, user_dir):
-    storage_client = storage.Client()
-    bucket = storage_client.bucket('foodcom_als_models')
+def model_download(item_dir, user_dir, bucket):
     bucket.blob(item_dir).download_to_filename(
         '_als_itemfactors.npy')
     bucket.blob(user_dir).download_to_filename(
         '_als_userfactors.npy')
 
 
-model_download('_als_itemfactors.npy', '_als_userfactors.npy')
+model_download('_als_itemfactors.npy', '_als_userfactors.npy', bucket)
 user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
-
+theme = np.load('./theme.npy', allow_pickle=True).item()
+theme_titles = np.load('./theme_title.npy', allow_pickle=True).item()
 LABEL_CNT = 10
 
 
@@ -264,12 +269,13 @@ async def return_answer(data: SignUpRequest):
 
 @router.post("/signin", description="로그인을 요청합니다")
 async def return_answer(data: SignInRequest):
-    names = set(pd.read_sql("select name from public.user_data", engine)['name'])
+    names = set(pd.read_sql(
+        "select name from public.user_data", engine)['name'])
     if data.name in names:
         user_data = pd.read_sql(
             f"select * from public.user_data where  name = '{data.name}';", engine)
         if str(user_data['password'].item()) == data.password:
-            return GeneralResponse(state='Approved', detail=str(user_data['user_id'].item()))
+            return SignInResponse(state='Approved', user_id=str(user_data['user_id'].item()), is_cold=user_data['cold_start'].item())
         else:
             return GeneralResponse(state='Denied', detail='wrong password')
     else:
@@ -286,4 +292,20 @@ async def return_answer():
 
 @router.post("/updatemodel", description="inference matrix를 업데이트된 정보로 변경합니다.")
 async def return_answer(data: ModelUpdateRequest):
-    model_download(data.item_factor, data.user_factor)
+    model_download(data.item_factor, data.user_factor, bucket)
+
+
+@router.get("/num_themes", description="inference matrix를 업데이트된 정보로 변경합니다.")
+async def return_answer():
+    return NumThemes(num=len(theme))
+
+
+@router.get("/theme/{theme_id}", description="inference matrix를 업데이트된 정보로 변경합니다.")
+async def return_answer(theme_id: int):
+    rec_list = theme[theme_id]
+    rec_sample = np.random.choice(rec_list, 5)
+    responses = []
+    for id in rec_sample:
+        responses.append(ThemeSample(
+            id=id, title=df[df['id'] == id]['name'].item(), image=''))
+    return ThemeSamples(theme_title=theme_titles[theme_id], samples=responses)
