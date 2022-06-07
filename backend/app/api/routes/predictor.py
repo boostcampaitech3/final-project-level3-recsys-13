@@ -67,11 +67,11 @@ df = pd.read_sql("select * from public.recipes", engine)
 LABEL_CNT = 10
 
 storage_client = storage.Client()
-bucket = storage_client.bucket('foodcom_als_models')
-# bucket.blob('theme.npy').download_to_filename(
-#         'theme.npy')
-# bucket.blob('theme_title.npy').download_to_filename(
-#         'theme_title.npy')
+bucket = storage_client.bucket('foodcom_als_model')
+bucket.blob('theme.npy').download_to_filename(
+        'theme.npy')
+bucket.blob('theme_title.npy').download_to_filename(
+        'theme_title.npy')
 
 def model_download(item_dir, user_dir, bucket):
     bucket.blob(item_dir).download_to_filename(
