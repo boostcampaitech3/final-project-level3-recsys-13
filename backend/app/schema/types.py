@@ -16,18 +16,17 @@ class UseridRequest(BaseModel):
     # uuid : 고유 식별자, Universally Unique Identifier
     userid: int
     # description: Optional[str] = None
-    on_off_button: List[bool] # 0:오븐 유무, 1:재료, 2:칼로리, 3:탄수화물, 4:단백질, 5:지방, 6:포화지방, 7:당류
-    ingredients: list # 재료
-    ingredient_use: bool # 선택한 재료 중 만들수 있는 레시피 True, 선택한 재료를 모두 사용하는 레시피 False
-    calories: List[int] # 칼로리 최소, 최대
-    carbohydrates: List[int] # 탄수화물 최소, 최대
-    protein: List[int] # 단백질 최소, 최대
-    fat: List[int] # 지방 최소, 최대
-    saturated_fat: List[int] # 포화지방 최소, 최대
-    sodium: List[int] # 나트륨 최소, 최대
-    sugar: List[int] # 당류 최소, 최대
-
-
+    # 0:오븐 유무, 1:재료, 2:칼로리, 3:탄수화물, 4:단백질, 5:지방, 6:포화지방, 7:당류
+    on_off_button: List[bool]
+    ingredients: list  # 재료
+    ingredient_use: bool  # 선택한 재료 중 만들수 있는 레시피 True, 선택한 재료를 모두 사용하는 레시피 False
+    calories: List[int]  # 칼로리 최소, 최대
+    carbohydrates: List[int]  # 탄수화물 최소, 최대
+    protein: List[int]  # 단백질 최소, 최대
+    fat: List[int]  # 지방 최소, 최대
+    saturated_fat: List[int]  # 포화지방 최소, 최대
+    sodium: List[int]  # 나트륨 최소, 최대
+    sugar: List[int]  # 당류 최소, 최대
 
 
 class Top10RecipesResponse(BaseModel):
@@ -60,11 +59,16 @@ class ModelUpdateRequest(BaseModel):
     user_factor: str
     item_factor: str
 
+
 class SignInResponse(BaseModel):
     state: str
     user_id: str
+    name: str
+    interactions: list
+    scores: list
+    interaction_count: int
     is_cold: bool
-    
+
 
 class GeneralResponse(BaseModel):
     state: str
