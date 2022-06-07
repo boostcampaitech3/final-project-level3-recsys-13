@@ -2,7 +2,7 @@ FROM python:3.8.5-slim-buster
 
 ENV PYTHONUNBUFFERED 1
 
-EXPOSE 30002
+EXPOSE 30001
 WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
@@ -13,4 +13,4 @@ RUN pip install --upgrade pip && \
 
 COPY . ./
 ENV PYTHONPATH app
-ENTRYPOINT ["python", "app/main.py"]
+ENTRYPOINT ["poetry", "run", "streamlit", "run", "main.py", "--server.port=30001"]
