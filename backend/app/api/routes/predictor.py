@@ -66,16 +66,6 @@ def ingredient_filter(recipes: pd.DataFrame, ingredients: list, use: bool):
         filtered = recipes[~recipes['ingredients'].str.contains(text)]
     return filtered.id.values
 
-# # 영양소 필터링
-# def nutrition_filter(recipes: pd.DataFrame, min_calories: float, max_calories: float, min_carbohydrates: float, max_carbohydrates: float, min_protein: float, max_protein: float, min_fat: float, max_fat: float):
-#     filtered = recipes[
-#         (recipes['calories'] < min_calories) | (recipes['calories'] > max_calories)
-#      | (recipes['carbohydrates (PDV)'] < min_carbohydrates) | (recipes['carbohydrates (PDV)'] > max_carbohydrates)
-#      | (recipes['protein (PDV)'] < min_protein) | (recipes['protein (PDV)'] > max_protein)
-#      | (recipes['total fat (PDV)'] < min_fat) | (recipes['total fat (PDV)'] > max_fat)
-#      ]
-#     return filtered.id.values
-
 # 칼로리 필터링
 def calories_filter(recipes: pd.DataFrame, min_calories: float, max_calories: float):
     filtered = recipes[(recipes['calories'] < min_calories) | (recipes['calories'] >max_calories)]

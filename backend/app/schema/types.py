@@ -17,7 +17,6 @@ class UseridRequest(BaseModel):
     userid: int
     # description: Optional[str] = None
     on_off_button: List[bool] # 0:오븐 유무, 1:재료, 2:칼로리, 3:탄수화물, 4:단백질, 5:지방, 6:포화지방, 7:당류
-    # withoven: bool # 오븐 유무
     ingredients: list # 재료
     ingredient_use: bool # 선택한 재료 중 만들수 있는 레시피 True, 선택한 재료를 모두 사용하는 레시피 False
     calories: List[int] # 칼로리 최소, 최대
