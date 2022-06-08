@@ -1,18 +1,15 @@
 import warnings
 import os
 import pandas as pd
-from datetime import datetime, timezone, timedelta
+from datetime import timezone, timedelta
 
 from google.cloud import storage
-import sqlalchemy
 
 import torch
-import foodcomImplicit
-import foodcomTorch
 
 from args import parse_args
-from dataloader import load_data, get_db_engine
-from utils import wandb_download, best_model_finder
+from dataloader import load_data, get_db_engine, save_data_for_recbole
+from utils import wandb_download, best_model_finder, subprocess_recbole, update_meta_data
 
 
 def main(args):
@@ -25,64 +22,87 @@ def main(args):
     
     # batch_tag update in db <<before inference>>
     if args.update_batch_tag:
+        print('update batch tag & load data...')
         meta_data = pd.read_sql(f"select * from public.meta_data", engine)
         meta_data['batch_tag'] += 1
         update_meta_data(meta_data, engine)
         
-        return
-    
-    # best_model update in db <<after inference>>
-    if args.inference_info:
-        run_df = wandb_download()
-        best_model_str = best_model_finder(run_df)
+        inter_df, _ = load_data()
+        save_data_for_recbole(inter_df=inter_df)
         
-        meta_data = pd.read_sql(f"select * from public.meta_data", engine)
-        meta_data['best_model'] = best_model_str
-        update_meta_data(meta_data, engine)
-        
+        print('done')
         return
-
-
-    # model inference
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     
     engine = get_db_engine()
     meta_data = pd.read_sql(f"select * from public.meta_data", engine)
     batch_tag = meta_data['batch_tag'].item()
     args.batch_tag = batch_tag
     
-    if args.model == 'als':
-        interactions_df, _ = load_data()
-        matrix_csr = foodcomImplicit.dataset.get_csr_matrix_inference(interactions_df)
-        if foodcomImplicit.trainer.run_inference(args, matrix_csr):
-            print('als inference...')
-            bucket = storage_client.bucket('foodcom_als_models')
-            bucket.blob(f'user_factors_{args.batch_tag}.npy').upload_from_filename(os.path.join(args.als_dir, 'user_factors.npy'))
-            bucket.blob(f'item_factors_{args.batch_tag}.npy').upload_from_filename(os.path.join(args.als_dir, 'item_factors.npy'))
-        print('als inference done.')
+    # best_model update in db <<after inference>>
+    if args.inference_info:
+        print('find best models...')
+        run_df = wandb_download(str(args.batch_tag))
+        best_model_names, best_model_scores = best_model_finder(run_df, top_n=3)
+        
+        meta_data['best_model'] = str(best_model_names)
+        processed_best_model_score = list()
+        for score in best_model_scores:
+            processed_best_model_score.append(round(score * 1000, 4))
+        processed_best_model_score.append(round(sum(processed_best_model_score), 4))
+        
+        meta_data['inference_traffic'] = str(processed_best_model_score)
+        update_meta_data(meta_data, engine)
+        
+        print('done.')
+        return
+
+    # model inference
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    saved = os.path.join('/opt/ml/final-project-level3-recsys-13/modeling/RecBole/saved', str(args.batch_tag))
+    bucket = storage_client.bucket('foodcom_als_model')
+        
+    if args.model == 'BPR':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
+        
+    elif args.model == 'LightGCN':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
+        
+    elif args.model == 'MultiVAE':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
+        
+    elif args.model == 'MultiDAE':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
+        
+    elif args.model == 'CDAE':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
+        
+    elif args.model == 'RecVAE':
+        subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
+        print('uploading...')
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
+        
+        print(f'{args.model} done.')
             
-    elif args.model == 'multivae':
-        pass
-    
-        
-    
-def update_meta_data(df:pd.DataFrame, engine) -> None:
-    df.to_sql(name='meta_data',
-                con=engine,
-                schema='public',
-                if_exists='replace',
-                index=False,
-                dtype={
-                    'user_count': sqlalchemy.types.INTEGER(),
-                    'recipe_count': sqlalchemy.types.INTEGER(),
-                    'interaction_count': sqlalchemy.types.INTEGER(),
-                    'best_model': sqlalchemy.types.Text(),
-                    'batch_tag': sqlalchemy.types.INTEGER()
-                    }
-                )
-    return
-        
-    
 
 if __name__ == "__main__":    
     args = parse_args()

@@ -5,10 +5,10 @@ install:
 
 server:
 # cd airfow
-	airflow db init
 	export AIRFLOW_HOME=.
+	airflow db init
 	airflow users create --username admin --password 1234 --firstname jinsu --lastname kim --role Admin --email aaa@naver.com
-	airflow webserver --port=30005
+	airflow webserver --port=30003
 
 scheduler:
 	export AIRFLOW_HOME=.

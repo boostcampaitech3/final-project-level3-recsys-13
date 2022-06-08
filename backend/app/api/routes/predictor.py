@@ -384,6 +384,9 @@ async def return_answer(data: SignUpRequest):
                     'user_count': sqlalchemy.types.INTEGER(),
                     'recipe_count': sqlalchemy.types.INTEGER(),
                     'interaction_count': sqlalchemy.types.INTEGER()
+                    'best_model': sqlalchemy.types.Text(),
+                    'batch_tag': sqlalchemy.types.INTEGER(),
+                    'inference_traffic': sqlalchemy.types.Text()
                 }
             )
             return GeneralResponse(state='Approved', detail='Signup Success')

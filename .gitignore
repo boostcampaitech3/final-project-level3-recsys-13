@@ -33,3 +33,7 @@ _als*
 theme*
 stoked-magpie-*
 recipe-reco-*
+
+*.npy
+*.pickle
+*.json

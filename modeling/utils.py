@@ -5,6 +5,8 @@ import os
 import random
 import torch
 import wandb
+import subprocess
+import sqlalchemy
 from tqdm import tqdm
 
 def setSeeds(seed=42):
@@ -119,9 +121,11 @@ def recall_at_k_with_similar_data(test_path:str, predicted:list, topk:int) -> fl
     return sum_recall / true_users
 
 
-def wandb_download(runs:str = "boostcamp-relu/foodcom") -> pd.DataFrame:
+def wandb_download(runs:str = "batchtag_0") -> pd.DataFrame:
     api = wandb.Api()
+    runs = "boostcamp-relu/batchtag_" + runs
     runs = api.runs(runs)
+
 
     summary_list, config_list, name_list = [], [], []
     for run in runs: 
@@ -143,19 +147,48 @@ def wandb_download(runs:str = "boostcamp-relu/foodcom") -> pd.DataFrame:
     name_df = pd.DataFrame(name_list)
     name_df.columns=['exp_name']
     
-    run_df = pd.concat([name_df, config_df, summary_df], axis=1
-                       )
+    run_df = pd.concat([name_df, config_df, summary_df], axis=1)
     return run_df
 
 
-def best_model_finder(run_df:pd.DataFrame) -> str:
-    recent_batch_tag = run_df.batch_tag.max()
-    recent_df = run_df[run_df['batch_tag'] == recent_batch_tag]
+def best_model_finder(run_df:pd.DataFrame, top_n:int=3) -> str:
+    model_list = run_df.model.unique()
+    model_score = list()
+    for model in model_list:
+        model_score.append(run_df[run_df['model'] == model]['eval/recall@3'].max())
+
+    ind = np.argsort(model_score)[::-1]
+    best_model_list = model_list[ind[:top_n]]
+    best_score_list = np.array(model_score)[ind[:top_n]]
     
-    best_score = recent_df['test recall'].max()
-    best_model = recent_df[recent_df['test recall'] == best_score].iloc[0,:]
+    return list(best_model_list), list(best_score_list)
+
+
+def subprocess_recbole(model_name:str, batch_tag:int, path:str):
+    print(f'{model_name} train...')
+    subprocess.run(
+        ['python', 'run_recbole.py', f'--model={model_name}', f'--wandb_project=batchtag_{batch_tag}', f'--checkpoint_dir=saved/{batch_tag}'],
+        cwd = '/opt/ml/final-project-level3-recsys-13/modeling/RecBole')
     
-    best_model_str = f'{best_model["model"]}_{best_model["batch_tag"]}'
+    subprocess.run(
+        ['python', 'make_npy_file.py', '--model_name', model_name, '--path', path],
+        cwd = '/opt/ml/final-project-level3-recsys-13/modeling/RecBole')
+
     
-    return best_model_str
-    
+def update_meta_data(df:pd.DataFrame, engine) -> None:
+    df.to_sql(name='meta_data',
+                con=engine,
+                schema='public',
+                if_exists='replace',
+                index=False,
+                dtype={
+                    'user_count': sqlalchemy.types.INTEGER(),
+                    'recipe_count': sqlalchemy.types.INTEGER(),
+                    'interaction_count': sqlalchemy.types.INTEGER(),
+                    'best_model': sqlalchemy.types.Text(),
+                    'batch_tag': sqlalchemy.types.INTEGER(),
+                    'inference_traffic': sqlalchemy.types.Text()
+                    }
+                )
+    return
+
