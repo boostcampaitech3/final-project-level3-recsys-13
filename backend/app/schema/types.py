@@ -88,3 +88,23 @@ class ThemeSample(BaseModel):
 class ThemeSamples(BaseModel):
     theme_title: str
     samples: List[ThemeSample]
+
+class return_recipe_info(BaseModel):
+    name: str
+    id: int
+    minutes : int
+    submitted : str
+    tags : str
+    nutrition : str
+    steps : str
+    # description : Optional[str]
+    ingredients : str
+    calories : int
+    totalfat : float
+    sugar : float
+    sodium : float
+    protein : float
+    saturatedFat : float
+    carbohydrates : float
+    url : str
+

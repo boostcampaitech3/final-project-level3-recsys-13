@@ -451,3 +451,27 @@ async def return_answer(theme_id: int):
         responses.append(ThemeSample(
             id=id, title=df[df['id'] == id]['name'].item(), image=''))
     return ThemeSamples(theme_title=theme_titles[theme_id], samples=responses)
+
+@router.get("/recipe/{recipe_id}", description="레시피 정보를 가져옵니다.")
+async def return_answer(recipe_id: int):
+    recipe_info = pd.read_sql(f"select * from public.recipes where public.recipes.id = {str(recipe_id)}", engine)
+    
+    return return_recipe_info(
+        name = recipe_info["name"].iloc[0],    
+        id = recipe_info["id"].iloc[0],
+        minutes = recipe_info["minutes"].iloc[0],
+        submitted = recipe_info["submitted"].iloc[0],
+        tags = recipe_info["tags"].iloc[0],
+        nutrition = recipe_info["nutrition"].iloc[0],
+        steps = recipe_info["steps"].iloc[0],
+        ingredients = recipe_info["ingredients"].iloc[0],
+        calories = recipe_info["calories"].iloc[0],
+        totalfat = recipe_info["total fat (PDV)"].iloc[0],
+        sugar = recipe_info["sugar (PDV)"].iloc[0],
+        sodium = recipe_info["sodium (PDV)"].iloc[0],
+        protein = recipe_info["protein (PDV)"].iloc[0],
+        saturatedFat = recipe_info["saturated fat (PDV)"].iloc[0],
+        carbohydrates = recipe_info["carbohydrates (PDV)"].iloc[0],
+        url = recipe_info["url"].iloc[0]
+    )
+
