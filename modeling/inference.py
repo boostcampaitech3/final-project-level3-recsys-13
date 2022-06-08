@@ -64,42 +64,42 @@ def main(args):
     if args.model == 'BPR':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
         
     elif args.model == 'LightGCN':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
         
     elif args.model == 'MultiVAE':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
         
     elif args.model == 'MultiDAE':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
         
     elif args.model == 'CDAE':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
         
     elif args.model == 'RecVAE':
         subprocess_recbole(model_name=args.model, batch_tag=batch_tag, path=saved)
         print('uploading...')
-        bucket.blob(f'{args.model}.pickle').upload_from_filename(os.path.join(saved, f'{args.model}.pickle'))
+        bucket.blob(f'{args.model}.npy').upload_from_filename(os.path.join(saved, f'{args.model}.npy'))
         
         print(f'{args.model} done.')
             

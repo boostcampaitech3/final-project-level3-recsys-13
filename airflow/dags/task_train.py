@@ -62,7 +62,7 @@ def train_start(**context):
 with DAG(
     dag_id='train_start',
     default_args=default_args,
-    schedule_interval = '0 0 0/4 * *',
+    schedule_interval = '* * */4 * *',
     tags=['boostcamp_ai_final']
 )as dag:
 

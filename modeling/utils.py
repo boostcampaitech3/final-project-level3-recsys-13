@@ -171,7 +171,7 @@ def subprocess_recbole(model_name:str, batch_tag:int, path:str):
         cwd = '/opt/ml/final-project-level3-recsys-13/modeling/RecBole')
     
     subprocess.run(
-        ['python', 'make_zip_file.py', '--model_name', model_name, '--path', path],
+        ['python', 'make_npy_file.py', '--model_name', model_name, '--path', path],
         cwd = '/opt/ml/final-project-level3-recsys-13/modeling/RecBole')
 
     
