@@ -27,7 +27,7 @@
 - 학습 가능한 모델
     - als: `--model als`
     - bert2vec: `--model bert2vec`
-    - ...
+    - recbole...
 - argparse 사용법(subparse)
     - argparse는 모든 모델에서 사용하는 공동 argparse와 하위 각 모델에서 사용할 subparse로 구성됨
     - 예시1) als를 사용하고 싶을 때
@@ -42,13 +42,10 @@
     - `python inference.py --update_batch_tag`
 - inference : 커맨드는 train과 같음
     - infernce.py는 모델을 모든 데이터로 학습시키고, 결과를 google storage로 전송시킵니다.
-    - storage 모델 저장: {~모델이름 혹은 factors~}_{batch tag}
-        - ex) item_factors_1.npy
-        - ex) user_factors_1.npy
+    - storage 모델 저장: {모델이름}.pickle
+        - ex) BPR.pickle
 
 - **inference 한 후**
-    - 다음 쉘 커맨드로 최근 batch tag를 가진 모델 중 가장 높은 recall을 가진 모델의 이름과 태그를 db에 저장합니다. 
+    - 다음 쉘 커맨드로 최근 batch tag를 가진 모델 중 가장 높은 recall을 가진 모델들의 이름을 db에 저장합니다. 
     - `python inference.py --inference_info`
 
-## TODO
-- torch 모델 추가
