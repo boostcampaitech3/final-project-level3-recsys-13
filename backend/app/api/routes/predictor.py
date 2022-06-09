@@ -1,12 +1,10 @@
-from typing import Any, List
-
 import os
 import joblib
 import ast
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from schema.types import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, SignInResponse, ModelUpdateRequest, NumThemes, ThemeSample, ThemeSamples
+from schema.types import GeneralRequest, GeneralResponse, RecoRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, SignInResponse, ModelUpdateRequest, NumThemes, ThemeSample, ThemeSamples
 from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
@@ -15,6 +13,8 @@ import re
 import sqlalchemy
 import time
 from core.config import DATABASE_URL, GOOGLE_APPLICATION_CREDENTIALS
+
+from .postprocessing import filtering
 
 from google.cloud import storage
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
@@ -27,72 +27,6 @@ def get_db_engine():
     engine = sqlalchemy.create_engine(DATABASE_URL, echo=True)
     #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
     return engine  # , meta
-
-
-def ingredient_filter(recipes: pd.DataFrame, ingredients: list, use: bool):
-    if use == True:
-        l = "|".join(ingredients)
-        filtered = recipes[~recipes.ingredients.str.contains(l)]
-    elif use == "and":
-        text = '^' + ''.join(fr'(?=.*{w})' for w in ingredients)
-        filtered = recipes[~recipes['ingredients'].str.contains(text)]
-    return filtered.id.values
-
-# 칼로리 필터링
-
-
-def calories_filter(recipes: pd.DataFrame, min_calories: float, max_calories: float):
-    filtered = recipes[(recipes['calories'] < min_calories)
-                       | (recipes['calories'] > max_calories)]
-    return filtered.id.values
-
-# 탄수화물 필터링
-
-
-def carbohydrates_filter(recipes: pd.DataFrame, min_carbohydrates: float, max_carbohydrates: float):
-    filtered = recipes[(recipes['carbohydrates (PDV)'] < min_carbohydrates) | (
-        recipes['carbohydrates (PDV)'] > max_carbohydrates)]
-    return filtered.id.values
-
-# 단백질 필터링
-
-
-def protein_filter(recipes: pd.DataFrame, min_protein: float, max_protein: float):
-    filtered = recipes[(recipes['protein (PDV)'] < min_protein) | (
-        recipes['protein (PDV)'] > max_protein)]
-    return filtered.id.values
-
-# 지방 필터링
-
-
-def fat_filter(recipes: pd.DataFrame, min_fat: float, max_fat: float):
-    filtered = recipes[(recipes['total fat (PDV)'] < min_fat)
-                       | (recipes['total fat (PDV)'] > max_fat)]
-    return filtered.id.values
-
-# 포화지방 필터링
-
-
-def saturated_fat_filter(recipes: pd.DataFrame, min_saturated_fat: float, max_saturated_fat: float):
-    filtered = recipes[(recipes['saturated fat (PDV)'] < min_saturated_fat) | (
-        recipes['saturated fat (PDV)'] > max_saturated_fat)]
-    return filtered.id.values
-
-# 나트륨 필터링
-
-
-def sodium_filter(recipes: pd.DataFrame, min_sodium: float, max_sodium: float):
-    filtered = recipes[(recipes['sodium (PDV)'] < min_sodium)
-                       | (recipes['sodium (PDV)'] > max_sodium)]
-    return filtered.id.values
-
-# 당류 필터링
-
-
-def sugar_filter(recipes: pd.DataFrame, min_sugar: float, max_sugar: float):
-    filtered = recipes[(recipes['sugar (PDV)'] < min_sugar)
-                       | (recipes['sugar (PDV)'] > max_sugar)]
-    return filtered.id.values
 
 
 # 연결
@@ -108,11 +42,6 @@ bucket = storage_client.bucket('foodcom_als_model')
 meta_data = pd.read_sql(f"select * from public.meta_data", engine)
 model_list = ast.literal_eval(meta_data['best_model'].item())
 
-def model_download(item_dir, user_dir, bucket: storage.Bucket):
-    bucket.blob(item_dir).download_to_filename(
-        '_als_itemfactors.npy')
-    bucket.blob(user_dir).download_to_filename(
-        '_als_userfactors.npy')
 
 def filter_download(bucket: storage.Bucket):
     bucket.blob('theme.npy').download_to_filename(
@@ -129,87 +58,46 @@ def batchpredict_download(bucket: storage.Bucket):
     for model in model_list:
         bucket.blob(f'{model}.npy').download_to_filename(f'{model}.npy')
     
-model_download('_als_itemfactors.npy', '_als_userfactors.npy', bucket)
 filter_download(bucket)
 batchpredict_download(bucket)
 
-user_factors: np.ndarray = np.load("_als_userfactors.npy")
-item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 theme = np.load('theme.npy', allow_pickle=True).item()
 theme_titles = np.load('theme_title.npy', allow_pickle=True).item()
 use_oven_recipe_ids = np.load('use_oven_recipe_ids.npy')
 LABEL_CNT = 10
 batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
 
-def get_user_prediction(user_id: int):
+def get_user_predictions(user_id: int):
+    '''
+    model_list에 저장된 모델들의 예측 결과를 유저별로 반환
+    '''
     return [ batchpredict[user_id] for batchpredict in batchpredicts ]
 
+def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10) -> tuple(list):
+    items, sources = [], []
+    a1, a2, a3, b1, b2, b3 = ast.literal_eval(meta_data['inference_traffic'].item())
+    while len(items) <= top_k:
+        sampling_list = [np.random.beta(a1, b1), np.random.beta(a2, b2), np.random.beta(a3, b3)]
+        best_model = np.argsort(sampling_list)[-1]
+        while True:
+            rec_item = user_predict[best_model].pop()
+            if rec_item not in items:
+                items.append(rec_item)
+                sources.append(best_model)
+                break
+    return items, sources
+
 @router.post("/recten", description="Top10 recipes를 요청합니다")
-async def return_top10_recipes(data: UseridRequest):
+async def return_top10_recipes(data: RecoRequest):
     userid = data.userid
-    ingredients = data.ingredients
-    ingredient_use = data.ingredient_use
-    button_oven, button_ingredients, button_calories, button_carbohydrates, button_protein, button_fat, button_saturated_fat, button_sodium, button_sugar = data.on_off_button
-    min_calories, max_calories = data.calories
-    min_carbohydrates, max_carbohydrates = data.carbohydrates
-    min_protein, max_protein = data.protein
-    min_fat, max_fat = data.fat
-    min_saturated_fat, max_saturated_fat = data.saturated_fat
-    min_sodium, max_sodium = data.sodium
-    min_sugar, max_sugar = data.sugar
-    user_preference: np.ndarray = (user_factors[userid] @ item_factors.T)
-    interacted_recipes = pd.read_sql(
-        f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine)['recipe_id']
-    total_filter = set()
-    # 사용한 레시피
-    interacted_recipes = [
-        rid for rid in interacted_recipes if rid < user_preference.shape[0]]
-    # 재료 필터
-    if button_ingredients:
-        ingredients_filtered_recipes = ingredient_filter(
-            df, ingredients, ingredient_use)
-        total_filter = total_filter | set(ingredients_filtered_recipes)
-    # 칼로리 필터
-    if button_calories:
-        calories_filtered_recipes = calories_filter(
-            df, min_calories, max_calories)
-        total_filter = total_filter | set(calories_filtered_recipes)
-    # 탄수화물 필터
-    if button_carbohydrates:
-        carbohydrates_filtered_recipes = carbohydrates_filter(
-            df, min_carbohydrates, max_carbohydrates)
-        total_filter = total_filter | set(carbohydrates_filtered_recipes)
-    # 단백질 필터
-    if button_protein:
-        protein_filtered_recipes = calories_filter(
-            df, min_protein, max_protein)
-        total_filter = total_filter | set(protein_filtered_recipes)
-    # 지방 필터
-    if button_fat:
-        fat_filtered_recipes = fat_filter(df, min_fat, max_fat)
-        total_filter = total_filter | set(fat_filtered_recipes)
-    # 포화지방 필터
-    if button_saturated_fat:
-        saturated_fat_filtered_recipes = saturated_fat_filter(
-            df, min_saturated_fat, max_saturated_fat)
-        total_filter = total_filter | set(saturated_fat_filtered_recipes)
-    # 나트륨 필터
-    if button_sodium:
-        sodium_filtered_recipes = sodium_filter(df, min_sodium, max_sodium)
-        total_filter = total_filter | set(sodium_filtered_recipes)
-    # 당류 필터
-    if button_sugar:
-        sugar_filtered_recipes = sugar_filter(df, min_sugar, max_sugar)
-        total_filter = total_filter | set(sugar_filtered_recipes)
+    interacted = pd.read_sql(
+        f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine).id.values
+    user_predictions = [ filtering(user_prediction, df, interacted, data.on_off_button, 
+                                    data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes) 
+                        for user_prediction in get_user_predictions(userid) ]
+    
+    top10_itemid, sources = blend_model_res(meta_data, user_predictions, LABEL_CNT)
 
-    # 오븐 유무
-    if not button_oven:
-        total_filter = total_filter | set(use_oven_recipe_ids)
-
-    user_preference[list(total_filter)] = float('-inf')
-    top10_itemid = user_preference.argpartition(-LABEL_CNT)[-LABEL_CNT:]
-
-    # df를 메모리에 올릴지, 쿼리해서 줄지 고민. 현재는 메모리에 올림.
     user_reco = []
     for id, name, description in df[df['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
         user_reco.append({'id': id, 'name': name, 'description': description})

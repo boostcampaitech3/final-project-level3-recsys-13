@@ -10,23 +10,28 @@ class HealthResponse(BaseModel):
     status: bool
 
 
-class UseridRequest(BaseModel):
+class RecoRequest(BaseModel):
     # Field : 모델 스키마 또는 복잡한 Validation 검사를 위해 필드에 대한 추가 정보를 제공할 때 사용
     # default_factory : Product Class가 처음 만들어 질 때 호출되는 함수를 list로 하겠다 => Product 클래스를 생성하면 list를 만들어서 저장
     # uuid : 고유 식별자, Universally Unique Identifier
-    userid: int
-    # description: Optional[str] = None
-    # 0:오븐 유무, 1:재료, 2:칼로리, 3:탄수화물, 4:단백질, 5:지방, 6:포화지방, 7:당류
-    on_off_button: List[bool]
-    ingredients: list  # 재료
-    ingredient_use: bool  # 선택한 재료 중 만들수 있는 레시피 True, 선택한 재료를 모두 사용하는 레시피 False
-    calories: List[int]  # 칼로리 최소, 최대
-    carbohydrates: List[int]  # 탄수화물 최소, 최대
-    protein: List[int]  # 단백질 최소, 최대
-    fat: List[int]  # 지방 최소, 최대
-    saturated_fat: List[int]  # 포화지방 최소, 최대
-    sodium: List[int]  # 나트륨 최소, 최대
-    sugar: List[int]  # 당류 최소, 최대
+    userid: int # 1
+
+    # on_off_button
+        # 0 : 재료필터 사용 여부    (0-사용안함, 1-사용)
+        # 1 : 나트륨 필터           (0-사용안함, 1-사용)
+        # 2 : 당류 필터             (0-사용안함, 1-사용)
+        # 3 : 조리시간 필터         (0-사용안함, 1-사용)
+        # 4 : 탄수화물 필터         (0-사용안함, 1-저탄수, 2-고탄수)
+        # 5 : 단백질 필터           (0-사용안함, 1-저단백, 2-고단백)
+        # 6 : 지방 필터             (0-사용안함, 1-저지방, 2-고지방)
+    on_off_button: List[bool]   # [0, 0, 0, 0, 0, 0, 0]
+
+    # 필터링할 재료 이름
+    ingredients_ls: list        # ['sugar', 'onion']
+
+    max_sodium: int             # 1000
+    max_sugar: int              # 1000
+    max_minutes: int            # 60
 
 
 class Top10RecipesResponse(BaseModel):

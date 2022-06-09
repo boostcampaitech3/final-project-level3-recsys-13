@@ -3,7 +3,6 @@ import numpy as np
 from typing import List
 
 '''
-
 from postprocessing import filtering
 
 ### filtering 인자 설명 ###
@@ -22,7 +21,7 @@ ingredients_ls -> 리스트 형태
 max_sodium -> 나트륨 최대량
 max_sugar -> 당류 최대량
 max_minutes -> 최대 조리시간
-
+filtering(a[0], recipes, [0, 0,0,0,0,0,0], ['sugar', 'onion'], 1000, 1000, 60)
 '''
 
 
@@ -68,11 +67,31 @@ def nutrition_rate(recipes: pd.DataFrame, button_carbohydrates, button_protein, 
     return rate
 
 # 필터링
-def filtering(user_recommendation_list: list, recipes: pd.DataFrame, buttons: List[int], ingredients_ls: List[str], max_sodium: int, max_sugar: int, max_minutes: int):
+def filtering(user_recommendation_list: list, recipes: pd.DataFrame, interacted: list,
+                buttons: List[int], ingredients_ls: List[str], max_sodium: int, max_sugar: int, max_minutes: int):
+    '''
+    user_recommendation_list -> 모델 추천 결과
+    recipes -> recipe dataframe
+    buttons -> length 7 리스트 형태
+        0 : 재료필터 사용 버튼 (0-사용안함, 1-사용)
+        1 : 나트륨 필터 (0-사용안함, 1-사용)
+        2 : 당류 필터 (0-사용안함, 1-사용)
+        3 : 조리시간 필터 (0-사용안함, 1-사용)
+        4 : 탄수화물 필터 (0-사용안함, 1-저탄수, 2-고탄수)
+        5 : 단백질 필터 (0-사용안함, 1-저단백, 2-고단백)
+        6 : 지방 필터 (0-사용안함, 1-저지방, 2-고지방)
+    ingredients_ls -> 리스트 형태
+    max_sodium -> 나트륨 최대량
+    max_sugar -> 당류 최대량
+    max_minutes -> 최대 조리시간
+    filtering(a[0], recipes, [0,0,0,0,0,0,0], ['sugar', 'onion'], 1000, 1000, 60)
+    '''
     button_ingredient, button_sodium, button_sugar, button_minutes, button_carbohydrates, button_protein, button_fat = buttons
     item2rate = dict((item, rank) for rank,item in enumerate(user_recommendation_list))
     filter_id = set()
 
+    if interacted:
+        filter_id = filter_id | set(interacted)
     if button_ingredient:
         filter_id = filter_id | set(ingredient_filter(recipes, ingredients_ls))
     if button_sodium:
@@ -86,7 +105,6 @@ def filtering(user_recommendation_list: list, recipes: pd.DataFrame, buttons: Li
     if filtered_df.shape[0] == 0:
         return []
     filtered_df['rank'] = filtered_df['id'].map(item2rate)
-    print(filtered_df['rank'])
     filtered_df['nutrition_rank'] = nutrition_rate(filtered_df, button_carbohydrates, button_protein, button_fat)
     filtered_recommendation = filtered_df.sort_values(['n_ingredients','nutrition_rank','rank'], ascending=[True,False ,True]).id.values
 
