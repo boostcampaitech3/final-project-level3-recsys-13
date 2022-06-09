@@ -1,38 +1,32 @@
-import os
 import joblib
-import ast
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from schema.types import *
 from services.predict import MachineLearningModelHandlerScore as model
 
+import re
+import time
+import sqlalchemy
 import numpy as np
 import pandas as pd
-import re
-import sqlalchemy
-import time
-
 
 from .postprocessing import filtering
-from .globalVars import engine, interaction_modified, meta_data, recipes, batchpredicts, model_list, LABEL_CNT, theme, theme_titles, update_batchpredict
+from .globalVars import engine, interaction_modified, recipes, get_user_predictions, model_list, LABEL_CNT, theme, theme_titles, update_batchpredict, ab
 
 
 router = APIRouter()
 user_reco_data_storage = {}
 
-def get_user_predictions(user_id: int):
-    '''
-    model_list에 저장된 모델들의 예측 결과를 유저별로 반환
-    '''
-    return [ batchpredict[user_id] for batchpredict in batchpredicts ]
 
-
-def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10):
+def blend_model_res(user_predict: list, top_k: int = 10):
     items, sources = [], []
-    a1, a2, a3, b1, b2, b3 = ast.literal_eval(meta_data['inference_traffic'].item())
-    while len(items) <= top_k:
-        sampling_list = [np.random.beta(a1, b1), np.random.beta(a2, b2), np.random.beta(a3, b3)]
+    _all = pd.read_sql("SELECT COUNT(*) FROM public.model_interactions;", engine)['count'].item()
+    _model = [ pd.read_sql(f"SELECT COUNT(*) FROM public.model_interactions WHERE model = '{model}';", engine)['count'].item() for model in model_list ]
+
+    alp_bet = [ (ab[model][0]+_model[i], ab[model][1]+_all) for i, model in enumerate(model_list) ]
+    while len(items) < top_k:
+        sampling_list = [ np.random.beta(a, b) for (a, b) in alp_bet ]
         best_model = np.argsort(sampling_list)[-1]
         while True:
             rec_item = user_predict[best_model].pop()
@@ -53,7 +47,7 @@ async def return_top10_recipes(data: RecoRequest):
                                     data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes)
                         for user_prediction in get_user_predictions(userid) ]
     
-    top10_itemid, sources = blend_model_res(meta_data, user_predictions, LABEL_CNT)
+    top10_itemid, sources = blend_model_res(user_predictions, LABEL_CNT)
     user_reco_data_storage[userid] = dict(zip(top10_itemid, sources))
     print(top10_itemid, sources)
 

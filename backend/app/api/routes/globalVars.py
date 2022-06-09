@@ -25,6 +25,10 @@ engine = get_db_engine()
 recipes = pd.read_sql("select * from public.recipes", engine)
 meta_data = pd.read_sql(f"select * from public.meta_data", engine)
 model_list = ast.literal_eval(meta_data['best_model'].item())
+inf_traffic = ast.literal_eval(meta_data['inference_traffic'].item())
+ab = {}
+for i, model in enumerate(model_list):
+    ab[model] = (inf_traffic[i], inf_traffic[i+len(model_list)])
 
 storage_client = storage.Client()
 bucket = storage_client.bucket('foodcom_als_model')
@@ -73,3 +77,9 @@ def update_batchpredict():
     batchpredict_download(bucket)
     global batchpredicts
     batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
+
+def get_user_predictions(user_id: int):
+    '''
+    model_list에 저장된 모델들의 예측 결과를 유저별로 반환
+    '''
+    return [ batchpredict[user_id] for batchpredict in batchpredicts ]
