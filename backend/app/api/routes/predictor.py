@@ -2,7 +2,7 @@ from typing import Any, List
 
 import os
 import joblib
-# from torch import R
+import ast
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
@@ -105,7 +105,8 @@ LABEL_CNT = 10
 
 storage_client = storage.Client()
 bucket = storage_client.bucket('foodcom_als_model')
-
+meta_data = pd.read_sql(f"select * from public.meta_data", engine)
+model_list = ast.literal_eval(meta_data['best_model'].item())
 
 def model_download(item_dir, user_dir, bucket: storage.Bucket):
     bucket.blob(item_dir).download_to_filename(
@@ -121,8 +122,16 @@ def filter_download(bucket: storage.Bucket):
     bucket.blob('use_oven_recipe_ids.npy').download_to_filename(
             'use_oven_recipe_ids.npy')
 
+def batchpredict_download(bucket: storage.Bucket):
+    '''
+    metadata에 저장된 모델의 예측 결과를 다운로드
+    '''
+    for model in model_list:
+        bucket.blob(f'{model}.npy').download_to_filename(f'{model}.npy')
+    
 model_download('_als_itemfactors.npy', '_als_userfactors.npy', bucket)
 filter_download(bucket)
+batchpredict_download(bucket)
 
 user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
@@ -130,7 +139,10 @@ theme = np.load('theme.npy', allow_pickle=True).item()
 theme_titles = np.load('theme_title.npy', allow_pickle=True).item()
 use_oven_recipe_ids = np.load('use_oven_recipe_ids.npy')
 LABEL_CNT = 10
+batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
 
+def get_user_prediction(user_id: int):
+    return [ batchpredict[user_id] for batchpredict in batchpredicts ]
 
 @router.post("/recten", description="Top10 recipes를 요청합니다")
 async def return_top10_recipes(data: UseridRequest):
