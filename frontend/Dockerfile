@@ -1,16 +1,12 @@
-FROM python:3.8.5-slim-buster
-
-ENV PYTHONUNBUFFERED 1
+FROM node:alpine
 
 EXPOSE 30001
-WORKDIR /app
+WORKDIR "/"
 
-COPY poetry.lock pyproject.toml ./
-RUN pip install --upgrade pip && \
-    pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev
+COPY package.json ./
 
-COPY . ./
-ENV PYTHONPATH app
-ENTRYPOINT ["poetry", "run", "streamlit", "run", "main.py", "--server.port=30001"]
+RUN npm install
+
+COPY ./ ./
+
+CMD ["npm", "start"]

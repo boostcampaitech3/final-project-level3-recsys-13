@@ -1,0 +1,33 @@
+.logo {
+    height: 300px;
+    width: 480px;
+}
+
+.smalllogo {
+    height: 50px;
+    width: 65px;
+}
+
+.outer-div {
+    margin: 1%;
+    margin-top: 3%;
+    margin-bottom: 3%;
+    justify-content: center;
+}
+
+.outer-card {
+    margin: 2%;
+    margin-top: 5%;
+    margin-bottom: 5%;
+    justify-content: center;
+}
+
+.recipe-image {
+    width: 50%;
+    height: 50%;
+    margin: auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
