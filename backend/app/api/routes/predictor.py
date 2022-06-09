@@ -47,7 +47,18 @@ async def return_top10_recipes(data: RecoRequest):
                                     data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes)
                         for user_prediction in get_user_predictions(userid) ]
     
-    top10_itemid, sources = blend_model_res(user_predictions, LABEL_CNT)
+    # 필터링 후 레시피가 10개 미만인 경우
+    if sum(map(len, user_predictions)) <= LABEL_CNT: 
+        top10_itemid, sources = [], []
+        for i, user_prediction in enumerate(user_predictions):
+            for item in user_prediction:
+                if item not in top10_itemid:
+                    top10_itemid.append(item)
+                    sources.append(i)
+    else:
+        top10_itemid, sources = blend_model_res(user_predictions, LABEL_CNT)
+    
+    # 유저별 추천 상황 기록 -> 일정 시간 지난 경우 삭제 구현 필요
     user_reco_data_storage[userid] = dict(zip(top10_itemid, sources))
     print(top10_itemid, sources)
 
