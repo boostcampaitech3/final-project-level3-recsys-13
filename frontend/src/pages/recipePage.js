@@ -67,6 +67,9 @@ export default function RecipePage(props) {
     fetch("/api/v1/score", requestOptions)
       .then((response) => response.json())
       .then((json) => {
+        for (let i = 0; i < json["interactions"].length; i++) {
+          json["interactions"][i]["id"] = i;
+        }
         window.localStorage.setItem(
           "interactions",
           JSON.stringify(json["interactions"])

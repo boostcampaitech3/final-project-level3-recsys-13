@@ -4,30 +4,19 @@ import "./index.css";
 import SignIn from "./pages/signin";
 import SignUp from "./pages/signup";
 import MainPage from "./pages/mainPage";
+import MyPage from "./pages/myPage";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 function Page() {
   const userid = localStorage.getItem("userid");
-  const [interact, setInteract] = React.useState([]);
-  const [log, setLog] = React.useState([]);
   if (!userid) {
     return (
       <BrowserRouter>
         <Routes>
           <Route path={"/*"} element={<Navigate replace to={"/signin"} />} />
-          <Route
-            path={"/signin"}
-            element={
-              <SignIn
-                log={log}
-                setLog={setLog}
-                interact={interact}
-                setInteract={setInteract}
-              />
-            }
-          />
+          <Route path={"/signin"} element={<SignIn />} />
           <Route path={"/signup"} element={<SignUp />} />
         </Routes>
       </BrowserRouter>
@@ -37,17 +26,8 @@ function Page() {
       <BrowserRouter>
         <Routes>
           <Route path={"/*"} element={<Navigate replace to={"/main"} />} />
-          <Route
-            path={"/main"}
-            element={
-              <MainPage
-                log={log}
-                setLog={setLog}
-                interact={interact}
-                setInteract={setInteract}
-              />
-            }
-          />
+          <Route path={"/main"} element={<MainPage />} />
+          <Route path={"/mypage"} element={<MyPage />} />
         </Routes>
       </BrowserRouter>
     );

@@ -6,6 +6,7 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
 import "./hanggi.css";
 import Tooltip from "@mui/material/Tooltip";
 import Logout from "@mui/icons-material/Logout";
@@ -13,25 +14,38 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import HomeIcon from "@mui/icons-material/Home";
-import Switch from "@mui/material/Switch";
-export default function TopBar(props) {
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import { Typography } from "@mui/material";
+import MainCard from "./mainCard";
+import { DataGrid } from "@mui/x-data-grid";
+import Dialog from "@mui/material/Dialog";
+import RecipePage from "./recipePage";
+
+export default function MyPage() {
+  const [dopen, setDOpen] = React.useState(false);
+  const [recId, setRecID] = React.useState(0);
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [cold, setCold] = React.useState(
-    window.localStorage.getItem("is_cold") === "true" ? true : false
-  );
+  const columns = [
+    { field: "id", headerName: "" },
+    { field: "recipe_id", headerName: "ID", width: 200 },
+    { field: "score", headerName: "평점", width: 200 },
+    { field: "date", headerName: "날짜", width: 300 },
+  ];
+  const rows = JSON.parse(window.localStorage.getItem("interactions"));
   const open = Boolean(anchorEl);
   const logout = () => {
     window.localStorage.clear();
     window.location.href = "/";
   };
   const publicUrl = process.env.PUBLIC_URL;
-  const handleSwitch = () => {
-    console.log(cold);
-    props.setSwitch(!props.switch);
+  const handleDOpen = () => {
+    setDOpen(true);
+  };
+  const handleDClose = () => {
+    setDOpen(false);
   };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
-    console.log(props.log);
   };
   const handleClose = () => {
     setAnchorEl(null);
@@ -51,18 +65,6 @@ export default function TopBar(props) {
             <Box
               sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}
             ></Box>
-            {cold === true ? (
-              <>
-                <Switch disabled />
-              </>
-            ) : (
-              <Switch
-                checked={props.switch}
-                onChange={handleSwitch}
-                inputProps={{ "aria-label": "controlled" }}
-              />
-            )}
-
             <Box sx={{ flexGrow: 0 }}>
               <IconButton
                 size="large"
@@ -114,11 +116,7 @@ export default function TopBar(props) {
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
-              <MenuItem
-                onClick={() => {
-                  window.location.href = "/mypage";
-                }}
-              >
+              <MenuItem>
                 <ListItemIcon>
                   <HomeIcon fontSize="small" />
                 </ListItemIcon>
@@ -134,6 +132,44 @@ export default function TopBar(props) {
           </Toolbar>
         </Container>
       </AppBar>
+      &nbsp;&nbsp;
+      <IconButton
+        onClick={() => {
+          window.location.href = "/main";
+        }}
+      >
+        <ArrowBackIosIcon />
+        <Typography>돌아가기</Typography>
+      </IconButton>
+      <div className="outer-div">
+        <Container component="main" maxWidth="xl">
+          <MainCard title={"마이페이지"}>
+            <Typography variant="subtitle1">나의 추천 목록</Typography>
+            <Divider />
+            <span>&nbsp;&nbsp;&nbsp;</span>
+            <div style={{ height: 650, width: "100%" }}>
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[10]}
+                onRowClick={(v) => {
+                  setRecID(v.row.recipe_id);
+                  handleDOpen();
+                }}
+              />
+            </div>
+          </MainCard>
+        </Container>
+        <Dialog
+          open={dopen}
+          onClose={handleDClose}
+          aria-labelledby="scroll-dialog-title"
+          aria-describedby="scroll-dialog-description"
+        >
+          <RecipePage id={recId} />
+        </Dialog>
+      </div>
     </div>
   );
 }

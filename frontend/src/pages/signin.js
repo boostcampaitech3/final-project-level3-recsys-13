@@ -24,6 +24,9 @@ export default function SignIn(props) {
         // console.log(response);
         window.localStorage.setItem("userid", response["user_id"]);
         window.localStorage.setItem("name", response["name"]);
+        for (let i = 0; i < response["interactions"].length; i++) {
+          response["interactions"][i]["id"] = i;
+        }
         window.localStorage.setItem(
           "interactions",
           JSON.stringify(response["interactions"])
