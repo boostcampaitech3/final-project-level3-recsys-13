@@ -5,8 +5,6 @@ from loguru import logger
 from schema.types import *
 from services.predict import MachineLearningModelHandlerScore as model
 
-import re
-import sqlalchemy
 import numpy as np
 import pandas as pd
 
