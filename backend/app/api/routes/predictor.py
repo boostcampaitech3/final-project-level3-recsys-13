@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any
 
 import os
 import joblib
@@ -6,7 +6,7 @@ import joblib
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from schema.types import GeneralRequest, GeneralResponse, UseridRequest, Top10RecipesResponse, RateRequest, SignUpRequest, SignInRequest, SignInResponse, ModelUpdateRequest, NumThemes, ThemeSample, ThemeSamples
+from schema.types import *
 from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
@@ -25,7 +25,7 @@ router = APIRouter()
 def get_db_engine():
     '''Returns a connection and a metadata object'''
     engine = sqlalchemy.create_engine(DATABASE_URL, echo=True)
-    #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
+    # meta = sqlalchemy.MetaData(bind=engine, reflect=True)
     return engine  # , meta
 
 
@@ -123,7 +123,7 @@ user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
 theme = np.load('./theme.npy', allow_pickle=True).item()
 theme_titles = np.load('./theme_title.npy', allow_pickle=True).item()
-use_oven_recipe_ids = np.load('./use_oven_recipe_ids.npy')
+# use_oven_recipe_ids = np.load('./use_oven_recipe_ids.npy')
 LABEL_CNT = 10
 
 
@@ -209,136 +209,72 @@ async def return_answer(data: RateRequest):
     meta_data = pd.read_sql(f"select * from public.meta_data;", engine)
     now = time.localtime()
     date = '%04d-%02d-%02d' % (now.tm_year, now.tm_mon, now.tm_mday)
-    if user_data['cold_start'].item():
-        if int(user_data['interaction_count'].item()) == 0:
-            user_data['interactions'] = str(int(data.recipe_id))
-            user_data['scores'] = str(int(data.rating))
-        else:
-            user_data['interactions'] = user_data['interactions'] + \
-                ' ' + str(int(data.recipe_id))
-            user_data['scores'] = user_data['scores'] + \
-                ' ' + str(int(data.rating))
-        user_data['interaction_count'] += 1
-        if int(user_data['interaction_count'].item()) >= 10:
+    user_id = user_data['user_id'].item()
+    interaction = pd.DataFrame(
+        {
+            'user_id': [data.user_id],
+            'recipe_id': [data.recipe_id],
+            'date': [date],
+            'rating': [data.rating]
+        }
+    )
+    interaction.to_sql(
+        name='interactions',
+        con=engine,
+        schema='public',
+        if_exists='append',
+        index=False,
+        dtype={
+            'user_id': sqlalchemy.types.INTEGER(),
+            'recipe_id': sqlalchemy.types.INTEGER(),
+            'date': sqlalchemy.types.TEXT(),
+            'rating': sqlalchemy.types.FLOAT(),
+        }
+    )
+    meta_data['interaction_count'] += 1
+    meta_data.to_sql(
+        name='meta_data',
+        con=engine,
+        schema='public',
+        if_exists='replace',
+        index=False,
+        dtype={
+            'user_count': sqlalchemy.types.INTEGER(),
+            'recipe_count': sqlalchemy.types.INTEGER(),
+            'interaction_count': sqlalchemy.types.INTEGER(),
+            'best_model': sqlalchemy.types.TEXT(),
+            'batch_tag': sqlalchemy.types.INTEGER()
+        }
+    )
+    user_data['interaction_count'] += 1
+    if user_data['cold_start'].item() == True:
+        if user_data['interaction_count'].item() >= 10:
             user_data['cold_start'] = False
-            interaction = pd.DataFrame(
-                {
-                    'user_id': [RateRequest.user_id]*user_data['interaction_count'],
-                    'recipe_id': user_data['interactions'].split(),
-                    'date': [date],
-                    'rating': user_data['scores'].split()
-                }
-            )
-            interaction.to_sql(
-                name='interactions',
-                con=engine,
-                schema='public',
-                if_exists='append',
-                index=False,
-                dtype={
-                    'user_id': sqlalchemy.types.INTEGER(),
-                    'recipe_id': sqlalchemy.types.INTEGER(),
-                    'date': sqlalchemy.types.TEXT(),
-                    'rating': sqlalchemy.types.FLOAT(),
-                }
-            )
-        user_data = user_data.squeeze()
-        full_user_data[full_user_data['user_id']
-                       == data.user_id] = user_data
-        full_user_data.to_sql(
-            name='user_data',
-            con=engine,
-            schema='public',
-            if_exists='replace',
-            index=False,
-            dtype={
-                'user_id': sqlalchemy.types.INTEGER(),
-                'name': sqlalchemy.types.TEXT(),
-                'password': sqlalchemy.types.TEXT(),
-                'scores': sqlalchemy.types.TEXT(),
-                'interaction_count': sqlalchemy.types.INTEGER(),
-                'cluster': sqlalchemy.types.INTEGER(),
-                'cold_start': sqlalchemy.types.BOOLEAN()
-            }
-        )
-        meta_data['interaction_count'] += user_data['interaction_count'].item()
-        meta_data.to_sql(
-            name='meta_data',
-            con=engine,
-            schema='public',
-            if_exists='replace',
-            index=False,
-            dtype={
-                'user_count': sqlalchemy.types.INTEGER(),
-                'recipe_count': sqlalchemy.types.INTEGER(),
-                'interaction_count': sqlalchemy.types.INTEGER(),
-                'best_model': sqlalchemy.types.TEXT(),
-                'batch_tag': sqlalchemy.types.INTEGER()
-            }
-        )
-    else:
-        interaction = pd.DataFrame(
-            {
-                'user_id': [data.user_id],
-                'recipe_id': [data.recipe_id],
-                'date': [date],
-                'rating': [data.rating]
-            }
-        )
-        interaction.to_sql(
-            name='interactions',
-            con=engine,
-            schema='public',
-            if_exists='append',
-            index=False,
-            dtype={
-                'user_id': sqlalchemy.types.INTEGER(),
-                'recipe_id': sqlalchemy.types.INTEGER(),
-                'date': sqlalchemy.types.TEXT(),
-                'rating': sqlalchemy.types.FLOAT(),
-            }
-        )
-        meta_data['interaction_count'] += user_data['interaction_count'].item()
-        meta_data.to_sql(
-            name='meta_data',
-            con=engine,
-            schema='public',
-            if_exists='replace',
-            index=False,
-            dtype={
-                'user_count': sqlalchemy.types.INTEGER(),
-                'recipe_count': sqlalchemy.types.INTEGER(),
-                'interaction_count': sqlalchemy.types.INTEGER(),
-                'best_model': sqlalchemy.types.TEXT(),
-                'batch_tag': sqlalchemy.types.INTEGER()
-            }
-        )
-        user_data['interactions'] = user_data['interactions'] + \
-            ' ' + str(int(data.recipe_id))
-        user_data['scores'] = user_data['scores'] + \
-            ' ' + str(int(data.rating))
-        user_data['interaction_count'] += 1
-        user_data = user_data.squeeze()
-        full_user_data[full_user_data['user_id']
-                       == data.user_id] = user_data
-        full_user_data.to_sql(
-            name='user_data',
-            con=engine,
-            schema='public',
-            if_exists='replace',
-            index=False,
-            dtype={
-                'user_id': sqlalchemy.types.INTEGER(),
-                'name': sqlalchemy.types.TEXT(),
-                'password': sqlalchemy.types.TEXT(),
-                'scores': sqlalchemy.types.TEXT(),
-                'interaction_count': sqlalchemy.types.INTEGER(),
-                'cluster': sqlalchemy.types.INTEGER(),
-                'cold_start': sqlalchemy.types.BOOLEAN()
-            }
-        )
-        interaction_modified = True
-    return GeneralResponse(state='Approved', detail='Saved Interaction')
+    user_data = user_data.squeeze()
+    full_user_data[full_user_data['user_id']
+                   == data.user_id] = user_data
+    full_user_data.to_sql(
+        name='user_data',
+        con=engine,
+        schema='public',
+        if_exists='replace',
+        index=False,
+        dtype={
+            'user_id': sqlalchemy.types.INTEGER(),
+            'name': sqlalchemy.types.TEXT(),
+            'password': sqlalchemy.types.TEXT(),
+            'interaction_count': sqlalchemy.types.INTEGER(),
+            'cold_start': sqlalchemy.types.BOOLEAN()
+        }
+    )
+    interaction_data = pd.read_sql(
+        f"select * from public.interactions where user_id = {user_id};", engine)
+    interaction_list = [Interactions(recipe_id=interaction_data.iloc[i]['recipe_id'],
+                                     score=interaction_data.iloc[i]['rating'],
+                                     date=interaction_data.iloc[i]['date']) for i in range(interaction_data.shape[0])]
+    log = list(interaction_data['recipe_id'])
+    interaction_modified = True
+    return RateResponse(log=log, interactions=interaction_list, is_cold=user_data['cold_start'].item(), interaction_count=user_data['interaction_count'].item())
 
 
 @router.post("/signup", description="회원가입을 요청합니다")
@@ -402,14 +338,22 @@ async def return_answer(data: SignInRequest):
         "select name from public.user_data", engine)['name'])
     if data.name in names:
         user_data = pd.read_sql(
-            f"select * from public.user_data where  name = '{data.name}';", engine)
+            f"select * from public.user_data where name = '{data.name}';", engine)
+        user_id = user_data['user_id'].item()
+        interaction_data = pd.read_sql(
+            f"select * from public.interactions where user_id = {user_id};", engine)
+        interaction_list = [Interactions(recipe_id=interaction_data.iloc[i]['recipe_id'],
+                                         score=interaction_data.iloc[i]['rating'],
+                                         date=interaction_data.iloc[i]['date']) for i in range(interaction_data.shape[0])]
+        log = list(interaction_data['recipe_id'])
+
         if str(user_data['password'].item()) == data.password:
             return SignInResponse(
                 state='Approved',
-                user_id=str(user_data['user_id'].item()),
+                user_id=int(user_data['user_id'].item()),
                 name=str(user_data['name'].item()),
-                interactions=user_data['interactions'].item().split(),
-                scores=user_data['scores'].item().split(),
+                log=log,
+                interactions=interaction_list,
                 interaction_count=int(user_data['interaction_count'].item()),
                 is_cold=user_data['cold_start'].item()
             )
@@ -432,17 +376,62 @@ async def return_answer(data: ModelUpdateRequest):
     model_download(data.item_factor, data.user_factor, bucket)
 
 
-@router.get("/num_themes", description="inference matrix를 업데이트된 정보로 변경합니다.")
+@router.get("/num_themes", description="전체 테마의 총량을 반환합니다.")
 async def return_answer():
     return NumThemes(num=len(theme))
 
 
-@router.get("/theme/{theme_id}", description="inference matrix를 업데이트된 정보로 변경합니다.")
+@router.get("/theme/{theme_id}", description="한개 테마를 받아 게시물을 반환합니다.")
 async def return_answer(theme_id: int):
     rec_list = theme[theme_id]
     rec_sample = np.random.choice(rec_list, 5)
     responses = []
     for id in rec_sample:
         responses.append(ThemeSample(
-            id=id, title=df[df['id'] == id]['name'].item(), image=''))
-    return ThemeSamples(theme_title=theme_titles[theme_id], samples=responses)
+            id=id, title=df[df['id'] == id]['name'].item(), image=df[df['id'] == id]['url'].item()))
+    return ThemeSamples(theme_title=theme_titles[theme_id], theme_id=theme_id, samples=responses)
+
+
+@router.post("/themes", description="테마 목록을 받아 게시물 리스트를 반환합니다.")
+async def return_answer(data: ThemeListRequest):
+    ret = []
+    for theme_id in data.themes:
+        rec_list = theme[theme_id]
+        rec_sample = np.random.choice(rec_list, 5)
+        responses = []
+        for id in rec_sample:
+            responses.append(ThemeSample(
+                id=id, title=df[df['id'] == id]['name'].item(), image=df[df['id'] == id]['url'].item()))
+        ret.append(ThemeSamples(
+            theme_title=theme_titles[theme_id], theme_id=theme_id, samples=responses))
+    return ThemeListResponse(articles=ret)
+
+
+@router.get("/recipe/{recipe_id}", description="레시피 정보를 가져옵니다.")
+async def return_answer(recipe_id: int):
+    recipe_info = pd.read_sql(
+        f"select * from public.recipes where public.recipes.id = {str(recipe_id)}", engine)
+
+    def refine(sen):
+        return(sen[1:])
+    step = recipe_info["steps"].item()[1:-1].split("', ")
+    step = list(map(refine, step))
+    step[-1] = step[-1][:-1]
+    return RecipeInfoResponse(
+        name=recipe_info["name"].item(),
+        id=recipe_info["id"].item(),
+        minutes=recipe_info["minutes"].item(),
+        submitted=recipe_info["submitted"].item(),
+        tags=recipe_info["tags"].item(),
+        nutrition=recipe_info["nutrition"].item(),
+        steps=step,
+        ingredients=recipe_info["ingredients"].item(),
+        calories=recipe_info["calories"].item(),
+        totalfat=recipe_info["total fat (PDV)"].item(),
+        sugar=recipe_info["sugar (PDV)"].item(),
+        sodium=recipe_info["sodium (PDV)"].item(),
+        protein=recipe_info["protein (PDV)"].item(),
+        saturatedFat=recipe_info["saturated fat (PDV)"].item(),
+        carbohydrates=recipe_info["carbohydrates (PDV)"].item(),
+        url=recipe_info["url"].item()
+    )
