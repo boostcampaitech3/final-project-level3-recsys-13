@@ -67,8 +67,8 @@ def nutrition_rate(recipes: pd.DataFrame, button_carbohydrates, button_protein, 
     return rate
 
 # 필터링
-def filtering(user_recommendation_list: list, recipes: pd.DataFrame, interacted: list,
-                buttons: List[int], ingredients_ls: List[str], max_sodium: int, max_sugar: int, max_minutes: int):
+def filtering(user_recommendation_list: list, recipes: pd.DataFrame, interacted: np.ndarray,
+                buttons: List[int], ingredients_ls: List[str], max_sodium: int, max_sugar: int, max_minutes: int) -> list:
     '''
     user_recommendation_list -> 모델 추천 결과
     recipes -> recipe dataframe
@@ -90,7 +90,7 @@ def filtering(user_recommendation_list: list, recipes: pd.DataFrame, interacted:
     item2rate = dict((item, rank) for rank,item in enumerate(user_recommendation_list))
     filter_id = set()
 
-    if interacted:
+    if interacted.any():
         filter_id = filter_id | set(interacted)
     if button_ingredient:
         filter_id = filter_id | set(ingredient_filter(recipes, ingredients_ls))
@@ -106,7 +106,7 @@ def filtering(user_recommendation_list: list, recipes: pd.DataFrame, interacted:
         return []
     filtered_df['rank'] = filtered_df['id'].map(item2rate)
     filtered_df['nutrition_rank'] = nutrition_rate(filtered_df, button_carbohydrates, button_protein, button_fat)
-    filtered_recommendation = filtered_df.sort_values(['n_ingredients','nutrition_rank','rank'], ascending=[True,False ,True]).id.values
+    filtered_recommendation = filtered_df.sort_values(['n_ingredients','nutrition_rank','rank'], ascending=[True,False ,True]).id.values.tolist()
 
 
     return filtered_recommendation

@@ -24,7 +24,7 @@ class RecoRequest(BaseModel):
         # 4 : 탄수화물 필터         (0-사용안함, 1-저탄수, 2-고탄수)
         # 5 : 단백질 필터           (0-사용안함, 1-저단백, 2-고단백)
         # 6 : 지방 필터             (0-사용안함, 1-저지방, 2-고지방)
-    on_off_button: List[bool]   # [0, 0, 0, 0, 0, 0, 0]
+    on_off_button: List[int]   # [0, 0, 0, 0, 0, 0, 0]
 
     # 필터링할 재료 이름
     ingredients_ls: list        # ['sugar', 'onion']

@@ -28,7 +28,7 @@ def get_user_predictions(user_id: int):
     return [ batchpredict[user_id] for batchpredict in batchpredicts ]
 
 
-def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10) -> tuple(list):
+def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10):
     items, sources = [], []
     a1, a2, a3, b1, b2, b3 = ast.literal_eval(meta_data['inference_traffic'].item())
     while len(items) <= top_k:
@@ -47,12 +47,14 @@ def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10) 
 async def return_top10_recipes(data: RecoRequest):
     userid = data.userid
     interacted = pd.read_sql(
-        f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine).id.values
+        f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine).recipe_id.values
+
     user_predictions = [ filtering(user_prediction, recipes, interacted, data.on_off_button, 
-                                    data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes) 
+                                    data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes)
                         for user_prediction in get_user_predictions(userid) ]
     
     top10_itemid, sources = blend_model_res(meta_data, user_predictions, LABEL_CNT)
+
 
     user_reco = []
     for id, name, description in recipes[recipes['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
