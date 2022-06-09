@@ -30,7 +30,8 @@ asset/
 data/
 _als*
 
-theme*
+theme.npy
+theme_title.npy
 stoked-magpie-*
 recipe-reco-*
 

@@ -35,21 +35,6 @@ storage_client = storage.Client()
 bucket = storage_client.bucket('foodcom_als_model')
 
 
-def filter_download(bucket: storage.Bucket):
-    bucket.blob('theme.npy').download_to_filename(
-        'theme.npy')
-    bucket.blob('theme_title.npy').download_to_filename(
-            'theme_title.npy')
-
-
-def batchpredict_download(bucket: storage.Bucket):
-    '''
-    metadata에 저장된 모델의 예측 결과를 다운로드
-    '''
-    for model in model_list:
-        bucket.blob(f'{model}.npy').download_to_filename(f'{model}.npy')
-
-
 def theme_download(bucket: storage.Bucket):
     bucket.blob('theme.npy').download_to_filename(
         'theme.npy')
@@ -78,6 +63,7 @@ def update_batchpredict():
     batchpredict_download(bucket)
     global batchpredicts
     batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
+
 
 def get_user_predictions(user_id: int):
     '''
