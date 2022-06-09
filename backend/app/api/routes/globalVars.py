@@ -12,6 +12,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 
 LABEL_CNT = 10
 interaction_modified = False
+user_reco_data_storage = {}
 
 def get_db_engine() -> sqlalchemy.engine.Engine:
     '''Returns a connection and a metadata object'''
