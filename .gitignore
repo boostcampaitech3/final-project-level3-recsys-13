@@ -37,4 +37,3 @@ recipe-reco-*
 
 *.npy
 *.pickle
-*.json
