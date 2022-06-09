@@ -41,11 +41,11 @@ def confirm_data():
     
     engine = get_db_engine()
     meta = pd.read_sql(f"select * from public.meta_data", engine)
-    db_user_n = meta['user_count'].item()
+    db_interaction_n = meta['interaction_count'].item()
 
-    flag = 1 if info["now_user_n"] < db_user_n else 0
+    flag = 1 if info["now_interaction_count"] < db_interaction_n else 0
     
-    info['now_user_n'] = db_user_n
+    info['now_interaction_count'] = db_interaction_n
     with open('info.yaml', 'w') as f:
         yaml.dump(info, f)
         
@@ -62,7 +62,7 @@ def train_start(**context):
 with DAG(
     dag_id='train_start',
     default_args=default_args,
-    schedule_interval = '* * */4 * *',
+    schedule_interval = '0 0/4 * * *',
     tags=['boostcamp_ai_final']
 )as dag:
 

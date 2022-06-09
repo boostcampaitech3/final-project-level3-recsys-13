@@ -105,25 +105,32 @@ LABEL_CNT = 10
 
 storage_client = storage.Client()
 bucket = storage_client.bucket('foodcom_als_model')
-# bucket.blob('theme.npy').download_to_filename(
-#         'theme.npy')
-# bucket.blob('theme_title.npy').download_to_filename(
-#         'theme_title.npy')
 
 
-def model_download(item_dir, user_dir, bucket):
+def model_download(item_dir, user_dir, bucket: storage.Bucket):
     bucket.blob(item_dir).download_to_filename(
         '_als_itemfactors.npy')
     bucket.blob(user_dir).download_to_filename(
         '_als_userfactors.npy')
 
+def filter_download(bucket: storage.Bucket):
+    bucket.blob('theme.npy').download_to_filename(
+        'theme.npy')
+    bucket.blob('theme_title.npy').download_to_filename(
+            'theme_title.npy')
+    bucket.blob('use_oven_recipe_ids.npy').download_to_filename(
+            'use_oven_recipe_ids.npy')
 
 model_download('_als_itemfactors.npy', '_als_userfactors.npy', bucket)
+filter_download(bucket)
+
 user_factors: np.ndarray = np.load("_als_userfactors.npy")
 item_factors: np.ndarray = np.load("_als_itemfactors.npy")
-theme = np.load('./theme.npy', allow_pickle=True).item()
-theme_titles = np.load('./theme_title.npy', allow_pickle=True).item()
-# use_oven_recipe_ids = np.load('./use_oven_recipe_ids.npy')
+
+theme = np.load('theme.npy', allow_pickle=True).item()
+theme_titles = np.load('theme_title.npy', allow_pickle=True).item()
+use_oven_recipe_ids = np.load('use_oven_recipe_ids.npy')
+
 LABEL_CNT = 10
 
 
