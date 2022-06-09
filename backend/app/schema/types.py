@@ -14,7 +14,7 @@ class RecoRequest(BaseModel):
     # Field : 모델 스키마 또는 복잡한 Validation 검사를 위해 필드에 대한 추가 정보를 제공할 때 사용
     # default_factory : Product Class가 처음 만들어 질 때 호출되는 함수를 list로 하겠다 => Product 클래스를 생성하면 list를 만들어서 저장
     # uuid : 고유 식별자, Universally Unique Identifier
-    userid: int # 1
+    user_id: int # 1
 
     # on_off_button
         # 0 : 재료필터 사용 여부    (0-사용안함, 1-사용)

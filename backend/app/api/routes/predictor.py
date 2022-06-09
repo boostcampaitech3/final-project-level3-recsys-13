@@ -19,7 +19,7 @@ from .globalVars import engine, interaction_modified, meta_data, recipes, batchp
 
 
 router = APIRouter()
-
+user_reco_data_storage = {}
 
 def get_user_predictions(user_id: int):
     '''
@@ -45,7 +45,7 @@ def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10):
 
 @router.post("/recten", description="Top10 recipes를 요청합니다")
 async def return_top10_recipes(data: RecoRequest):
-    userid = data.userid
+    userid = data.user_id
     interacted = pd.read_sql(
         f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine).recipe_id.values
 
@@ -54,13 +54,46 @@ async def return_top10_recipes(data: RecoRequest):
                         for user_prediction in get_user_predictions(userid) ]
     
     top10_itemid, sources = blend_model_res(meta_data, user_predictions, LABEL_CNT)
-
+    user_reco_data_storage[userid] = dict(zip(top10_itemid, sources))
+    print(top10_itemid, sources)
 
     user_reco = []
     for id, name, description in recipes[recipes['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
         user_reco.append({'id': id, 'name': name, 'description': description})
 
     return Top10RecipesResponse(lists=user_reco)
+
+
+def check_Reco_Item(user_id: int, recipe_id: int, date: str):
+    reco_model = None
+    # 추천해준 목록에 있던 레시피인지 확인
+    if user_id in user_reco_data_storage:
+        reco_dict = user_reco_data_storage[user_id]
+        if recipe_id in reco_dict:
+            # 추천해준 목록에 있던 레시피이므로 모델의 점수를 업데이트
+            model_id = reco_dict[recipe_id]
+            reco_model = model_list[model_id]
+            model_interaction = pd.DataFrame(
+                {
+                    'user_id': [user_id],
+                    'recipe_id': [recipe_id],
+                    'date': [date],
+                    'model': [str(reco_model)],
+                }
+            )
+            model_interaction.to_sql(
+                name='model_interactions',
+                con=engine,
+                schema='public',
+                if_exists='append',
+                index=False,
+                dtype={
+                    'user_id': sqlalchemy.types.INTEGER(),
+                    'recipe_id': sqlalchemy.types.INTEGER(),
+                    'date': sqlalchemy.types.TEXT(),
+                    'model': sqlalchemy.types.TEXT(),
+                }
+            )
 
 
 @router.post("/score", description="유저가 레시피에 점수를 남깁니다")
@@ -72,6 +105,7 @@ async def return_answer(data: RateRequest):
     meta_data = pd.read_sql(f"select * from public.meta_data;", engine)
     now = time.localtime()
     date = '%04d-%02d-%02d' % (now.tm_year, now.tm_mon, now.tm_mday)
+    check_Reco_Item(data.user_id, data.recipe_id, date)
     if user_data['cold_start'].item():
         if int(user_data['interaction_count'].item()) == 0:
             user_data['interactions'] = str(int(data.recipe_id))
@@ -86,7 +120,7 @@ async def return_answer(data: RateRequest):
             user_data['cold_start'] = False
             interaction = pd.DataFrame(
                 {
-                    'user_id': [RateRequest.user_id]*user_data['interaction_count'],
+                    'user_id': [data.user_id]*user_data['interaction_count'],
                     'recipe_id': user_data['interactions'].split(),
                     'date': [date],
                     'rating': user_data['scores'].split()
