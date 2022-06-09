@@ -65,12 +65,25 @@ class ModelUpdateRequest(BaseModel):
     item_factor: str
 
 
+class Interactions(BaseModel):
+    recipe_id: int
+    score: float
+    date: str
+
+
+class RateResponse(BaseModel):
+    interactions: List[Interactions]
+    log: List[int]
+    interaction_count: int
+    is_cold: bool
+
+
 class SignInResponse(BaseModel):
     state: str
-    user_id: str
+    user_id: int
     name: str
-    interactions: List[int]
-    scores: List[int]
+    interactions: List[Interactions]
+    log: List[int]
     interaction_count: int
     is_cold: bool
 
@@ -92,4 +105,33 @@ class ThemeSample(BaseModel):
 
 class ThemeSamples(BaseModel):
     theme_title: str
+    theme_id: int
     samples: List[ThemeSample]
+
+
+class ThemeListRequest(BaseModel):
+    themes: List[int]
+
+
+class ThemeListResponse(BaseModel):
+    articles: List[ThemeSamples]
+
+
+class RecipeInfoResponse(BaseModel):
+    name: str
+    id: int
+    minutes: int
+    submitted: str
+    tags: str
+    nutrition: str
+    steps: List[str]
+    # description : Optional[str]
+    ingredients: str
+    calories: int
+    totalfat: float
+    sugar: float
+    sodium: float
+    protein: float
+    saturatedFat: float
+    carbohydrates: float
+    url: str
