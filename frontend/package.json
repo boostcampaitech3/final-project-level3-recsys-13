@@ -24,7 +24,7 @@
     },
     "proxy": "http://101.101.211.183:30002",
     "scripts": {
-        "start": "set PORT=30001 && react-scripts start",
+        "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
