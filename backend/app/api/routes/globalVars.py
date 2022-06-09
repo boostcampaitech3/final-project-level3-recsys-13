@@ -77,3 +77,9 @@ def update_batchpredict():
     batchpredict_download(bucket)
     global batchpredicts
     batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
+
+def get_user_predictions(user_id: int):
+    '''
+    model_list에 저장된 모델들의 예측 결과를 유저별로 반환
+    '''
+    return [ batchpredict[user_id] for batchpredict in batchpredicts ]
