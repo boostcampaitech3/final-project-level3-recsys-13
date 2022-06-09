@@ -4,7 +4,8 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 from schema.types import *
 
-import time
+from pytz import timezone
+from datetime import datetime
 import sqlalchemy
 import pandas as pd
 
@@ -53,8 +54,8 @@ async def return_answer(data: RateRequest):
         f"select * from public.user_data where user_id = {data.user_id};", engine)
     full_user_data = pd.read_sql(f"select * from public.user_data;", engine)
     meta_data = pd.read_sql(f"select * from public.meta_data;", engine)
-    now = time.localtime()
-    date = '%04d-%02d-%02d' % (now.tm_year, now.tm_mon, now.tm_mday)
+    now = datetime.now(timezone('Asia/Seoul'))
+    date = '%04d-%02d-%02d' % (now.year, now.month, now.day)
     check_Reco_Item(data.user_id, data.recipe_id, date)
     interaction = pd.DataFrame(
         {
