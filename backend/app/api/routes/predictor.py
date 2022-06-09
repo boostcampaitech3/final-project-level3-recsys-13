@@ -12,66 +12,21 @@ import pandas as pd
 import re
 import sqlalchemy
 import time
-from core.config import DATABASE_URL, GOOGLE_APPLICATION_CREDENTIALS
+
 
 from .postprocessing import filtering
+from .globalVars import engine, interaction_modified, meta_data, recipes, batchpredicts, model_list, LABEL_CNT, theme, theme_titles, update_batchpredict
 
-from google.cloud import storage
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 
 router = APIRouter()
 
-
-def get_db_engine():
-    '''Returns a connection and a metadata object'''
-    engine = sqlalchemy.create_engine(DATABASE_URL, echo=True)
-    #meta = sqlalchemy.MetaData(bind=engine, reflect=True)
-    return engine  # , meta
-
-
-# 연결
-engine = get_db_engine()
-interaction_modified = False
-df = pd.read_sql("select * from public.recipes", engine)
-
-
-LABEL_CNT = 10
-
-storage_client = storage.Client()
-bucket = storage_client.bucket('foodcom_als_model')
-meta_data = pd.read_sql(f"select * from public.meta_data", engine)
-model_list = ast.literal_eval(meta_data['best_model'].item())
-
-
-def filter_download(bucket: storage.Bucket):
-    bucket.blob('theme.npy').download_to_filename(
-        'theme.npy')
-    bucket.blob('theme_title.npy').download_to_filename(
-            'theme_title.npy')
-    bucket.blob('use_oven_recipe_ids.npy').download_to_filename(
-            'use_oven_recipe_ids.npy')
-
-def batchpredict_download(bucket: storage.Bucket):
-    '''
-    metadata에 저장된 모델의 예측 결과를 다운로드
-    '''
-    for model in model_list:
-        bucket.blob(f'{model}.npy').download_to_filename(f'{model}.npy')
-    
-filter_download(bucket)
-batchpredict_download(bucket)
-
-theme = np.load('theme.npy', allow_pickle=True).item()
-theme_titles = np.load('theme_title.npy', allow_pickle=True).item()
-use_oven_recipe_ids = np.load('use_oven_recipe_ids.npy')
-LABEL_CNT = 10
-batchpredicts = [ np.load(f'{model}.npy', allow_pickle=True).item() for model in model_list ]
 
 def get_user_predictions(user_id: int):
     '''
     model_list에 저장된 모델들의 예측 결과를 유저별로 반환
     '''
     return [ batchpredict[user_id] for batchpredict in batchpredicts ]
+
 
 def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10) -> tuple(list):
     items, sources = [], []
@@ -87,19 +42,20 @@ def blend_model_res(meta_data: pd.DataFrame, user_predict: list, top_k: int=10) 
                 break
     return items, sources
 
+
 @router.post("/recten", description="Top10 recipes를 요청합니다")
 async def return_top10_recipes(data: RecoRequest):
     userid = data.userid
     interacted = pd.read_sql(
         f"SELECT recipe_id FROM public.interactions WHERE user_id IN ({userid})", engine).id.values
-    user_predictions = [ filtering(user_prediction, df, interacted, data.on_off_button, 
+    user_predictions = [ filtering(user_prediction, recipes, interacted, data.on_off_button, 
                                     data.ingredients_ls, data.max_sodium, data.max_sugar, data.max_minutes) 
                         for user_prediction in get_user_predictions(userid) ]
     
     top10_itemid, sources = blend_model_res(meta_data, user_predictions, LABEL_CNT)
 
     user_reco = []
-    for id, name, description in df[df['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
+    for id, name, description in recipes[recipes['id'].isin(top10_itemid)][['id', 'name', 'description']].values:
         user_reco.append({'id': id, 'name': name, 'description': description})
 
     return Top10RecipesResponse(lists=user_reco)
@@ -334,7 +290,7 @@ async def return_answer():
 
 @router.post("/updatemodel", description="inference matrix를 업데이트된 정보로 변경합니다.")
 async def return_answer(data: ModelUpdateRequest):
-    model_download(data.item_factor, data.user_factor, bucket)
+    update_batchpredict()
 
 
 @router.get("/num_themes", description="inference matrix를 업데이트된 정보로 변경합니다.")
@@ -349,5 +305,5 @@ async def return_answer(theme_id: int):
     responses = []
     for id in rec_sample:
         responses.append(ThemeSample(
-            id=id, title=df[df['id'] == id]['name'].item(), image=''))
+            id=id, title=recipes[recipes['id'] == id]['name'].item(), image=''))
     return ThemeSamples(theme_title=theme_titles[theme_id], samples=responses)
