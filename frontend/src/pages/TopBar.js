@@ -41,7 +41,11 @@ export default function TopBar(props) {
       <AppBar position="static" color="inherit">
         <Container maxWidth="xl">
           <Toolbar disableGutters varient="dense">
-            <Button>
+            <Button
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
               <img
                 src={`${publicUrl}/images/logo_m.png`}
                 alt="smalllogo"

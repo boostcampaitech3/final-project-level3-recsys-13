@@ -55,7 +55,11 @@ export default function MyPage() {
       <AppBar position="static" color="inherit">
         <Container maxWidth="xl">
           <Toolbar disableGutters varient="dense">
-            <Button>
+            <Button
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
               <img
                 src={`${publicUrl}/images/logo_m.png`}
                 alt="smalllogo"
@@ -144,7 +148,9 @@ export default function MyPage() {
       <div className="outer-div">
         <Container component="main" maxWidth="xl">
           <MainCard title={"마이페이지"}>
-            <Typography variant="subtitle1">나의 추천 목록</Typography>
+            <Typography variant="subtitle1">
+              {window.localStorage.getItem("name")}님의 추천 목록
+            </Typography>
             <Divider />
             <span>&nbsp;&nbsp;&nbsp;</span>
             <div style={{ height: 650, width: "100%" }}>

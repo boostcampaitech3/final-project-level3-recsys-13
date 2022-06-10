@@ -186,7 +186,7 @@ export default function ThemePage() {
       )}
 
       <Container component="main" maxWidth="xl">
-        <Typography variant="h3">테마별 레시피 추천</Typography>
+        <Typography variant="h4">테마별 레시피 추천</Typography>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <Divider />
         <span>&nbsp;&nbsp;&nbsp;</span>
@@ -204,7 +204,7 @@ export default function ThemePage() {
         {posts.map((item, index) => (
           <div>
             <Toolbar>
-              <Typography variant="h4" key={index}>
+              <Typography variant="h5" key={index}>
                 {`#${item.theme_title}`}
               </Typography>
               <IconButton
