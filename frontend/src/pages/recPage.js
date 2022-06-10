@@ -196,7 +196,7 @@ export default function RecPage(props) {
   return (
     <div className="outer-div">
       <Container component="main" maxWidth="xl">
-        <Typography variant="h3">맞춤형 레시피 추천</Typography>
+        <Typography variant="h4">맞춤형 레시피 추천</Typography>
         <span>&nbsp;&nbsp;&nbsp;</span>
         <Divider />
         <span>&nbsp;&nbsp;&nbsp;</span>
@@ -445,7 +445,6 @@ export default function RecPage(props) {
                           >
                             {recipe.name}
                           </Typography>
-
                           <ImageMarked className="MuiImageMarked-root" />
                         </Image>
                       </ImageButton>
