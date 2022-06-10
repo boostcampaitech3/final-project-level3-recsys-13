@@ -2,7 +2,7 @@ name: Docker Image CD
 
 on:
   push:
-    branches: [ master, dev, f#45]
+    branches: [ master ]
 
 jobs:
 
