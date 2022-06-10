@@ -27,7 +27,6 @@ async def return_answer(data: SignUpRequest):
                     'name': [data.name],
                     'password': [data.password],
                     'interaction_count': [0],
-                    'cluster': [0],
                     'cold_start': [True]
                 }
             )
@@ -42,7 +41,6 @@ async def return_answer(data: SignUpRequest):
                     'name': sqlalchemy.types.TEXT(),
                     'password': sqlalchemy.types.TEXT(),
                     'interaction_count': sqlalchemy.types.INTEGER(),
-                    'cluster': sqlalchemy.types.INTEGER(),
                     'cold_start': sqlalchemy.types.BOOLEAN()
                 }
             )
