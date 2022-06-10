@@ -1,6 +1,7 @@
 import warnings
 import os
 import pandas as pd
+import requests
 from datetime import timezone, timedelta
 
 from google.cloud import storage
@@ -49,10 +50,12 @@ def main(args):
         for score in best_model_scores:
             processed_best_model_score.append(round(score * 1000, 4))
         beta = round(sum(processed_best_model_score), 4)
-        processed_best_model_score.extend([beta for _ in range(len(best_model_scores))])
-        
+        processed_best_model_score.extend([beta - processed_best_model_score[i] for i in range(len(best_model_scores))])
+
         meta_data['inference_traffic'] = str(processed_best_model_score)
         update_meta_data(meta_data, engine)
+        
+        requests.post(f"http://next-hanggi.kro.kr:30002/api/v1/updatemodel", json= {"qeury": "inference done.", "user_factor": "string", "item_factor": "string"})
         
         print('done.')
         return
