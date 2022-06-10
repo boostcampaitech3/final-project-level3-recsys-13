@@ -5,7 +5,7 @@
     make server
 - scheduler 실행
     make scheduler
-
+- airflow/dags/core폴더에 .env파일을 넣어주세요
 
 2. make 안될 시 
 - airflow 설치

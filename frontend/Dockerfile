@@ -1,16 +1,13 @@
-FROM python:3.8.5-slim-buster
-
-ENV PYTHONUNBUFFERED 1
+FROM node:lts-alpine3.16
 
 EXPOSE 30001
-WORKDIR /app
+WORKDIR "/"
 
-COPY poetry.lock pyproject.toml ./
-RUN pip install --upgrade pip && \
-    pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev
+COPY package.json ./
 
-COPY . ./
-ENV PYTHONPATH app
-ENTRYPOINT ["poetry", "run", "streamlit", "run", "main.py", "--server.port=30001"]
+RUN npm install 
+RUN npm install --force --save react-swipeable-views
+
+COPY ./ ./
+
+CMD ["npm", "start"]

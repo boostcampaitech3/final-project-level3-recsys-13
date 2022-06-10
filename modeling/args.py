@@ -15,6 +15,12 @@ def parse_args():
     subparsers = parser.add_subparsers(dest='model')
     parser_als = subparsers.add_parser(name='als')
     parser_bert2vec = subparsers.add_parser(name='bert2vec')
+    parser_BPR = subparsers.add_parser(name='BPR')
+    parser_LightGCN = subparsers.add_parser(name='LightGCN')
+    parser_MultiVAE = subparsers.add_parser(name='MultiVAE')
+    parser_MultiDAE = subparsers.add_parser(name='MultiDAE')
+    parser_CDAE = subparsers.add_parser(name='CDAE')
+    parser_RecVAE = subparsers.add_parser(name='RecVAE')
     
     # als settings
     parser_als.add_argument("--n_epochs", default=5, type=int, help="iter n")

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import sqlalchemy
+import os
 
 from core.config import DATABASE_URL
 from utils import setSeeds
@@ -41,3 +42,15 @@ def load_data():
     recipes_df = pd.read_sql("select * from public.recipes", engine)
 
     return interactions_df, recipes_df
+
+
+def save_data_for_recbole(inter_df:pd.DataFrame):
+    inter_df.columns = ['user_id:token', 'recipe_id:token', 'date:token', 'rating:float']
+    inter_df['rating:float'] = 1
+    
+    directory = '/opt/ml/final-project-level3-recsys-13/modeling/RecBole/dataset/foodcom'
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+        
+    inter_df.to_csv(os.path.join(directory, 'foodcom.inter'), index=False)
+    return
