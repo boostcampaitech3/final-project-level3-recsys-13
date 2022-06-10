@@ -13,7 +13,7 @@ from recbole.quick_start import load_data_and_model
 def main(args):
     engine = get_db_engine()
     user_data = pd.read_sql(f"select * from public.user_data", engine)
-    users = user_data['user_id'].unique()
+    users = user_data[user_data['cold_start'] == False]['user_id'].unique()
     path_dir = args.path
     file_list = os.listdir(path_dir)
     for file in file_list:
