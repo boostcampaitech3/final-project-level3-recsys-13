@@ -1,4 +1,5 @@
 import joblib
+from regex import B
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
@@ -7,6 +8,7 @@ from services.predict import MachineLearningModelHandlerScore as model
 
 import numpy as np
 import pandas as pd
+from collections import deque
 
 from .postprocessing import filtering
 from .globalVars import engine, user_reco_data_storage, interaction_modified, recipes, get_user_predictions, model_list, LABEL_CNT, update_batchpredict, ab
@@ -16,16 +18,17 @@ router = APIRouter()
 
 
 def blend_model_res(user_predict: list, top_k: int = 10):
+    user_predict = [ deque(up) for up in user_predict ]
     items, sources = [], []
     _all = pd.read_sql("SELECT COUNT(*) FROM public.model_interactions;", engine)['count'].item()
     _model = [ pd.read_sql(f"SELECT COUNT(*) FROM public.model_interactions WHERE model = '{model}';", engine)['count'].item() for model in model_list ]
 
     alp_bet = [ (ab[model][0]+_model[i], ab[model][1]+_all) for i, model in enumerate(model_list) ]
     while len(items) < top_k:
-        sampling_list = [ np.random.beta(a, b) for (a, b) in alp_bet ]
+        sampling_list = [ np.random.beta(a, b) if len(user_predict[i])!=0 else 0 for (i, (a, b)) in enumerate(alp_bet) ]
         best_model = np.argsort(sampling_list)[-1]
         while True:
-            rec_item = user_predict[best_model].pop()
+            rec_item = user_predict[best_model].popleft()
             if rec_item not in items:
                 items.append(rec_item)
                 sources.append(best_model)
