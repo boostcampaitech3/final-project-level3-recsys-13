@@ -26,7 +26,8 @@ TODO
 TODO
 
 ## 3. Service Architecture
-TODO
+<img width="602" alt="프로젝트 구조" src="https://user-images.githubusercontent.com/83912849/173310755-c8117c50-e9d3-466b-9e38-92cd3b3a5539.png">
+
 
 ## 4. WorkFlow
 TODO
