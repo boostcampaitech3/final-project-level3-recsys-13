@@ -50,3 +50,4 @@ https://user-images.githubusercontent.com/83912849/173855429-79b28cd5-cf1f-49c0-
 ### Docs
 - [Wrap up report](https://drive.google.com/file/d/1W6aFEr6iPoF7YV_bGBKI8nnSOslZGwa3/view?usp=sharing)
 - [Software Requirement Specification](https://github.com/boostcampaitech3/final-project-level3-recsys-13/tree/master/docs)
+- [Sprint Backlog](https://abundant-foxglove-fab.notion.site/Team-Re-LU-product-serving-c8daad49be544bb5802075b3716b5aa3)
