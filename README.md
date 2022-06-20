@@ -26,6 +26,11 @@
 
 # 2. Demonstration 
 ### 전체 서비스 설명
+- [0:35] Intro 
+- [1:46] Service Architecture 
+- [2:36] Data Engineering 
+- [4:34] Model Engineering 
+- [6:43] Product Serving 
 
 https://user-images.githubusercontent.com/83912849/173855884-27bef2fd-209b-419b-be8b-327293d899ba.mp4
 
