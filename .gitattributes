@@ -1,1 +1,6 @@
 *.ipynb linguist-detectable=false
+modeling/*.ipynb linguist-detectable=false
+modeling/RecBole/*.ipynb linguist-detectable=false
+modeling/RecBole/run_example/*.ipynb linguist-detectable=false
+modeling/foodcomImplicit/*.ipynb linguist-detectable=false
+Data Analysis/*.ipynb linguist-detectable=false
