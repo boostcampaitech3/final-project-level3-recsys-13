@@ -19,17 +19,19 @@ def main(args):
     for file in file_list:
         if file.startswith(args.model_name):
             break
-    
-    result_dict = inference_top_n(os.path.join(path_dir, file), users=users, top_n = 100)
+        
+    result_dict = inference_top_n(path_dir, file, users=users, top_n = 100)
     np.save(f'{path_dir}/{args.model_name}.npy', result_dict)
     
 
 def inference_top_n(
-    model_pth_path:str, 
+    path_dir:str, 
+    file:str, 
     users:np.ndarray,
     top_n:int = 100
     ) -> dict:
     
+    model_pth_path = os.path.join(path_dir, file)
     _, model, dataset, _, _, test_data = load_data_and_model(model_pth_path)
     print('inference...')
     # device 설정
@@ -49,7 +51,7 @@ def inference_top_n(
     model.eval()
     for data in tqdm(test_data):
         interaction = data[0]
-        if int(interaction['user_id']) - 1 in users:
+        if int(user_id2token[int(interaction['user_id'])]) in users:
             interaction = interaction.to(device)
             score = model.full_sort_predict(interaction)
             
@@ -70,7 +72,6 @@ def inference_top_n(
     result = []
     for user, pred in zip(user_list, pred_list):
         result.append((int(user_id2token[user]), int(item_id2token[pred])))
-            
     # 데이터 처리 : 딕셔너리로 반환
     result_df = pd.DataFrame(result, columns=["user", "item"])
     result_df.sort_values(by='user', inplace=True)
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--model_name", default='BPR', type=str, help="model name")
-    parser.add_argument("--path", default='/opt/ml/final-project-level3-recsys-13/modeling/RecBole/saved/7', type=str, help="saved path")
+    parser.add_argument("--path", default='/opt/ml/final-project-level3-recsys-13/modeling/RecBole/saved/12', type=str, help="saved path")
     
     args = parser.parse_args()
     

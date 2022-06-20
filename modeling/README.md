@@ -1,5 +1,3 @@
-# final_project_modeling_base
-![](https://velog.velcdn.com/images/whattsup_kim/post/d5bee838-179a-48e8-bec2-04829cf2aab1/image.png)
 
 ## How To Use
 ### setting

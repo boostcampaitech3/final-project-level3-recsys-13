@@ -1,4 +1,5 @@
 import joblib
+from regex import B
 from core.errors import PredictException
 from fastapi import APIRouter, HTTPException
 from loguru import logger
